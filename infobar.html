@@ -1,94 +1,87 @@
+<!-- infobar.html -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Live Info Bar</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
       margin: 0;
       background: transparent;
+      color: white;
       font-family: 'Segoe UI', sans-serif;
     }
     #info-bar {
+      position: fixed;
+      bottom: 0;
       width: 100%;
-      background: rgba(0, 0, 0, 0.9);
-      color: white;
-      font-size: 1.2rem;
+      background: rgba(0, 0, 0, 0.75);
+      font-size: 1rem;
       display: flex;
       justify-content: center;
-      gap: 2rem;
       align-items: center;
-      padding: 8px 12px;
+      padding: 8px 0;
+      z-index: 9999;
     }
     .info-item {
+      margin: 0 10px;
       display: flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 4px;
       white-space: nowrap;
     }
   </style>
 </head>
 <body>
   <div id="info-bar">
+    <div class="info-item">📡 <strong>LIVE</strong></div>
     <div class="info-item">⏰ <span id="time">-</span></div>
-    <div class="info-item">📏 <span id="distance">0</span>km</div>
     <div class="info-item">🔋 <span id="battery">-</span>%</div>
-    <div class="info-item">🌡️ <span id="temp">-</span></div>
+    <div class="info-item">🌡️ <span id="temp">-</span>°C</div>
     <div class="info-item">☁️ <span id="desc">-</span></div>
     <div class="info-item">🌬️ <span id="wind">-</span> m/s</div>
+    <div class="info-item">📶 <span id="gps">-</span></div>
   </div>
 
   <script>
-    let prevLat = null, prevLng = null, totalDist = 0;
-
-    function updateClock() {
+    function formatTime() {
       const now = new Date();
-      const h = now.getHours();
-      const m = now.getMinutes().toString().padStart(2, '0');
-      const ampm = h >= 12 ? '오후' : '오전';
-      const hour12 = h > 12 ? h - 12 : h;
-      document.getElementById('time').textContent = `${ampm} ${hour12}:${m}`;
+      const hour = now.getHours();
+      const minute = now.getMinutes().toString().padStart(2, '0');
+      const ampm = hour >= 12 ? '오후' : '오전';
+      const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+      return `${ampm} ${displayHour}:${minute}`;
     }
 
-    function haversine(lat1, lon1, lat2, lon2) {
-      const R = 6371;
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
-      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    function updateTime() {
+      document.getElementById('time').textContent = formatTime();
     }
+
+    updateTime();
+    setInterval(updateTime, 1000);
 
     async function fetchData() {
       try {
         const res = await fetch("https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec");
         const data = await res.json();
 
-        const lat = parseFloat(data.lat);
-        const lng = parseFloat(data.lng);
+        document.getElementById('battery').textContent = data.battery;
+        document.getElementById('temp').textContent = data.temp || '-';
+        document.getElementById('desc').textContent = data.desc || '-';
+        document.getElementById('wind').textContent = data.wind || '-';
 
-        if (prevLat !== null && prevLng !== null) {
-          totalDist += haversine(prevLat, prevLng, lat, lng);
-          document.getElementById("distance").textContent = totalDist.toFixed(2);
-        }
-        prevLat = lat;
-        prevLng = lng;
-
-        document.getElementById("battery").textContent = data.battery;
-
-        const weatherRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=a2530b8c9f61aa303ed3dc7ca3d85819&units=metric&lang=kr`);
-        const weather = await weatherRes.json();
-        document.getElementById("temp").textContent = `${Math.round(weather.main.temp)}°C`;
-        document.getElementById("desc").textContent = weather.weather[0].description;
-        document.getElementById("wind").textContent = weather.wind.speed;
-      } catch (err) {
-        console.error("정보 불러오기 실패:", err);
+        const acc = parseFloat(data.accuracy || 999);
+        let gpsStatus = '나쁨';
+        if (acc <= 10) gpsStatus = '좋음';
+        else if (acc <= 30) gpsStatus = '보통';
+        document.getElementById('gps').textContent = gpsStatus;
+      } catch (e) {
+        console.error("데이터 로딩 오류:", e);
       }
     }
 
-    setInterval(updateClock, 1000); // 실시간 시계
-    updateClock();
     fetchData();
     setInterval(fetchData, 5000);
   </script>
