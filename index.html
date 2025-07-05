@@ -11,7 +11,8 @@
       margin: 0;
       padding: 0;
       height: 100%;
-      background: #000;
+      overflow: hidden;
+      font-family: 'Segoe UI', sans-serif;
     }
     #map {
       width: 100%;
@@ -19,27 +20,32 @@
     }
     .info-panel {
       position: absolute;
-      bottom: 20px;
-      right: 20px;
-      background: rgba(255, 255, 255, 0.95);
+      top: 20px;
+      left: 20px;
+      background-color: rgba(255, 255, 255, 0.95);
       color: #111;
-      padding: 16px;
-      border-radius: 12px;
-      font-family: 'Segoe UI', sans-serif;
+      padding: 14px 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
       font-size: 16px;
-      line-height: 1.6;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      min-width: 220px;
+      z-index: 999;
     }
     .info-panel h2 {
-      margin-top: 0;
+      margin: 0 0 10px;
       font-size: 18px;
-      font-weight: bold;
       color: #000;
+    }
+    .info-panel hr {
+      border: none;
+      border-top: 1px solid #ccc;
+      margin: 10px 0;
     }
   </style>
 </head>
 <body>
   <div id="map"></div>
+
   <div class="info-panel">
     <h2>📌 실시간 위치 추적</h2>
     ⏰ 시간: <span id="time">-</span><br />
@@ -54,62 +60,10 @@
 
   <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoieW9vbmd5OTEiLCJhIjoiY21jcTVjd2hrMDl6OTJpczNtcThvOTB3byJ9.PXjOq69n2cGQq2U-BwWkfg';
-    
+
     const map = new mapboxgl.Map({
       container: 'map',
       style: 'mapbox://styles/mapbox/light-v10',
       center: [127.02317, 37.62033],
       zoom: 14
     });
-
-    const marker = new mapboxgl.Marker({ color: 'lime' })
-      .setLngLat([127.02317, 37.62033])
-      .addTo(map);
-
-    async function fetchData() {
-      try {
-        const res = await fetch('https://docs.google.com/spreadsheets/d/1zhJpMY2Txv1YMER2dxjRtJIO7s3Y0mxAS2Ec_AvM65Q/gviz/tq?tqx=out:json');
-        const text = await res.text();
-        const json = JSON.parse(text.substring(47).slice(0, -2));
-
-        const row = json.table.rows.at(-1).c;
-        const time = row[0]?.f;
-        const lat = parseFloat(row[1]?.v);
-        const lng = parseFloat(row[2]?.v);
-        const acc = row[3]?.v;
-        const bat = row[4]?.v;
-
-        document.getElementById('time').textContent = time;
-        document.getElementById('accuracy').textContent = acc;
-        document.getElementById('battery').textContent = bat;
-
-        marker.setLngLat([lng, lat]);
-        map.flyTo({ center: [lng, lat], speed: 0.8 });
-
-        fetchWeather(lat, lng);
-      } catch (e) {
-        console.error('위치 데이터 오류:', e);
-      }
-    }
-
-    async function fetchWeather(lat, lon) {
-      try {
-        const apiKey = 'a2530b8c9f61aa303ed3dc7ca3d85819'; // YOUR OPENWEATHER KEY
-        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=kr`;
-        const res = await fetch(url);
-        const data = await res.json();
-
-        document.getElementById('temp').textContent = data.main.temp;
-        document.getElementById('desc').textContent = data.weather[0].description;
-        document.getElementById('wind').textContent = data.wind.speed;
-      } catch (err) {
-        console.error('날씨 정보 오류:', err);
-      }
-    }
-
-    // 🔁 15초 주기 갱신
-    fetchData();
-    setInterval(fetchData, 15000);
-  </script>
-</body>
-</html>
