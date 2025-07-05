@@ -76,6 +76,10 @@
 <body>
   <div id="info-bar">
     <div class="info-item blinking">🔴 Live</div>
+
+    <!-- 4G/5G 네트워크 상태 표시 -->
+    <div class="info-item" id="network-status">-</div>
+
     <div class="info-item">
       <div class="signal-bars">
         <div class="bar bar1" id="sig1"></div>
@@ -149,6 +153,9 @@
 
         if (data.accuracy) updateSignalBars(data.accuracy);
         if (data.battery) updateBatteryFill(data.battery);
+
+        // 4G, 5G 네트워크 상태 표시 (없으면 '-'로)
+        document.getElementById('network-status').textContent = data.network || '-';
 
         // ✅ 날씨 API 키 실제 적용
         if (data.lat && data.lng) {
