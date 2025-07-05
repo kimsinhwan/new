@@ -1,20 +1,18 @@
+<!-- ✅ map_leaflet.html - 지도만 표시 (한글 지도 + 사용자 마커 + 위치 추적) -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Live Map</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
-    html, body {
+    html, body, #map {
       margin: 0;
       padding: 0;
       height: 100%;
-    }
-    #map {
-      width: 100%;
-      height: 100%;
+      background: #000;
     }
   </style>
 </head>
@@ -22,65 +20,37 @@
   <div id="map"></div>
 
   <script>
-    const map = L.map('map').setView([37.62033, 127.02317], 17); // 🔍 위에서 보는 2D 느낌 줌
+    const map = L.map('map').setView([37.62033, 127.02317], 17);
 
-    // 🌏 OpenStreetMap 한글 지도 타일 (무료)
-    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19
     }).addTo(map);
 
-    // 🧭 커스텀 마커 아이콘
     const icon = L.icon({
-      iconUrl: './marker.png',
+      iconUrl: 'marker.png',
       iconSize: [40, 40],
       iconAnchor: [20, 40],
     });
 
-    let marker = L.marker([37.62033, 127.02317], { icon }).addTo(map);
+    const marker = L.marker([37.62033, 127.02317], { icon }).addTo(map);
 
-    let prevLat = null;
-    let prevLng = null;
-    let totalDistance = 0;
-
-    function getDistance(lat1, lon1, lat2, lon2) {
-      const R = 6371e3; // Earth radius in meters
-      const toRad = x => x * Math.PI / 180;
-      const dLat = toRad(lat2 - lat1);
-      const dLon = toRad(lon2 - lon1);
-      const a = Math.sin(dLat / 2) ** 2 +
-                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-                Math.sin(dLon / 2) ** 2;
-      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    }
-
-    async function fetchData() {
+    async function updateLocation() {
       try {
-        const res = await fetch("https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec");
+        const res = await fetch('https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec');
         const data = await res.json();
         const { lat, lng } = data;
-
         if (lat && lng) {
           marker.setLatLng([lat, lng]);
           map.setView([lat, lng], 17);
-
-          if (prevLat !== null && prevLng !== null) {
-            const d = getDistance(prevLat, prevLng, lat, lng);
-            if (d < 500) totalDistance += d; // 비정상 점프 방지
-          }
-
-          prevLat = lat;
-          prevLng = lng;
-
-          // 🎯 거리 전송 (infobar와 공유하려면 localStorage로도 가능)
-          localStorage.setItem("totalDistance", (totalDistance / 1000).toFixed(2));
         }
       } catch (err) {
-        console.error("지도 fetch 실패", err);
+        console.error('지도 위치 업데이트 오류:', err);
       }
     }
 
-    fetchData();
-    setInterval(fetchData, 5000);
+    updateLocation();
+    setInterval(updateLocation, 5000);
   </script>
 </body>
 </html>

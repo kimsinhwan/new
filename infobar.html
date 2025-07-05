@@ -10,41 +10,38 @@
       padding: 0;
       background: transparent;
     }
-
     #info-bar {
       display: flex;
       justify-content: flex-start;
       align-items: center;
       gap: 16px;
-      background: rgba(0, 0, 0, 0.9);
+      background: rgba(0, 0, 0, 0.85);
       color: white;
       font-size: 1rem;
-      padding: 8px 24px; /* ⬅️ 양쪽 여백 추가 */
+      padding: 8px 24px;
       white-space: nowrap;
     }
-
     .info-item {
       display: inline-flex;
       align-items: center;
       gap: 4px;
     }
-
     @media screen and (max-width: 480px) {
       #info-bar {
         font-size: 0.9rem;
         flex-wrap: wrap;
-        justify-content: flex-start;
       }
     }
   </style>
 </head>
 <body>
   <div id="info-bar">
-    <div class="info-item" style="color:#4ade80;">🟢 Live 📡</div> <!-- Live + GPS 상태 -->
+    <div class="info-item" style="color:#4ade80;">🟢 Live</div>
+    <div class="info-item">📶 <span id="gps">-</span></div>
     <div class="info-item">🛵 <span id="distance">0.00</span>km</div>
     <div class="info-item">🌡️ <span id="temp">-</span>°C</div>
     <div class="info-item">☁️ <span id="desc">-</span></div>
-    <div class="info-item">💨 <span id="wind">-</span> m/s</div>
+    <div class="info-item">🌬️ <span id="wind">-</span> m/s</div>
     <div class="info-item">⏰ <span id="time">-</span></div>
     <div class="info-item">🔋 <span id="battery">-</span>%</div>
   </div>
@@ -65,17 +62,16 @@
       try {
         const res = await fetch('https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec');
         const data = await res.json();
-
         document.getElementById('temp').textContent = data.temp ?? '-';
         document.getElementById('desc').textContent = data.desc ?? '-';
         document.getElementById('wind').textContent = data.wind ?? '-';
         document.getElementById('battery').textContent = data.battery ?? '-';
+        document.getElementById('gps').textContent = data.accuracy ? `${data.accuracy}m` : '-';
         document.getElementById('distance').textContent = (data.distance ?? 0).toFixed(2);
       } catch (e) {
         console.error('하단바 fetch 오류:', e);
       }
     }
-
     setInterval(fetchData, 5000);
     fetchData();
   </script>
