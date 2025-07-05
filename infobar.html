@@ -37,7 +37,7 @@
 <body>
   <div id="info-bar">
     <div class="info-item" style="color:#4ade80;">🟢 Live</div>
-    <div class="info-item">📶 <span id="gps">-</span></div>
+    <div class="info-item">📶 <span id="gps">-</span> (<span id="gps-text">-</span>)</div>
     <div class="info-item">🛵 <span id="distance">0.00</span>km</div>
     <div class="info-item">🌡️ <span id="temp">-</span>°C</div>
     <div class="info-item">☁️ <span id="desc">-</span></div>
@@ -58,6 +58,15 @@
     setInterval(updateTime, 1000);
     updateTime();
 
+    function getSignalText(accuracy) {
+      const acc = parseFloat(accuracy);
+      if (isNaN(acc)) return '-';
+      if (acc <= 10) return '매우 좋음';
+      if (acc <= 30) return '좋음';
+      if (acc <= 50) return '보통';
+      return '나쁨';
+    }
+
     async function fetchData() {
       try {
         const res = await fetch('https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec');
@@ -67,6 +76,7 @@
         document.getElementById('wind').textContent = data.wind ?? '-';
         document.getElementById('battery').textContent = data.battery ?? '-';
         document.getElementById('gps').textContent = data.accuracy ? `${data.accuracy}m` : '-';
+        document.getElementById('gps-text').textContent = getSignalText(data.accuracy);
         document.getElementById('distance').textContent = (data.distance ?? 0).toFixed(2);
       } catch (e) {
         console.error('하단바 fetch 오류:', e);
