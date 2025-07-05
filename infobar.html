@@ -3,75 +3,92 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Info Bar</title>
+  <title>Live Info Bar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
       margin: 0;
-      padding: 0;
       background: transparent;
       font-family: 'Segoe UI', sans-serif;
     }
     #info-bar {
-      position: fixed;
-      bottom: 0;
       width: 100%;
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(0, 0, 0, 0.9);
       color: white;
       font-size: 1.2rem;
       display: flex;
-      justify-content: space-around;
+      justify-content: center;
+      gap: 2rem;
       align-items: center;
-      padding: 10px;
+      padding: 8px 12px;
     }
     .info-item {
-      white-space: nowrap;
       display: flex;
       align-items: center;
-      gap: 0.25rem;
+      gap: 0.4rem;
+      white-space: nowrap;
     }
   </style>
 </head>
 <body>
   <div id="info-bar">
     <div class="info-item">⏰ <span id="time">-</span></div>
-    <div class="info-item">📍 정확도: <span id="accuracy">-</span>m</div>
+    <div class="info-item">📏 <span id="distance">0</span>km</div>
     <div class="info-item">🔋 <span id="battery">-</span>%</div>
-    <div class="info-item">🌡️ <span id="temp">-</span>°C</div>
+    <div class="info-item">🌡️ <span id="temp">-</span></div>
     <div class="info-item">☁️ <span id="desc">-</span></div>
     <div class="info-item">🌬️ <span id="wind">-</span> m/s</div>
   </div>
 
   <script>
+    let prevLat = null, prevLng = null, totalDist = 0;
+
+    function updateClock() {
+      const now = new Date();
+      const h = now.getHours();
+      const m = now.getMinutes().toString().padStart(2, '0');
+      const ampm = h >= 12 ? '오후' : '오전';
+      const hour12 = h > 12 ? h - 12 : h;
+      document.getElementById('time').textContent = `${ampm} ${hour12}:${m}`;
+    }
+
+    function haversine(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
     async function fetchData() {
       try {
-        const res = await fetch('https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec');
+        const res = await fetch("https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec");
         const data = await res.json();
 
-        document.getElementById('time').textContent = new Date(data.timestamp).toLocaleTimeString();
-        document.getElementById('accuracy').textContent = data.accuracy || '-';
-        document.getElementById('battery').textContent = data.battery || '-';
+        const lat = parseFloat(data.lat);
+        const lng = parseFloat(data.lng);
 
-        fetchWeather(data.lat, data.lng);
-      } catch (e) {
-        console.error('정보 바 오류:', e);
-      }
-    }
+        if (prevLat !== null && prevLng !== null) {
+          totalDist += haversine(prevLat, prevLng, lat, lng);
+          document.getElementById("distance").textContent = totalDist.toFixed(2);
+        }
+        prevLat = lat;
+        prevLng = lng;
 
-    async function fetchWeather(lat, lon) {
-      try {
-        const key = 'a2530b8c9f61aa303ed3dc7ca3d85819';
-        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${key}&units=metric&lang=kr`;
-        const res = await fetch(url);
-        const data = await res.json();
+        document.getElementById("battery").textContent = data.battery;
 
-        document.getElementById('temp').textContent = data.main.temp;
-        document.getElementById('desc').textContent = data.weather[0].description;
-        document.getElementById('wind').textContent = data.wind.speed;
+        const weatherRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=a2530b8c9f61aa303ed3dc7ca3d85819&units=metric&lang=kr`);
+        const weather = await weatherRes.json();
+        document.getElementById("temp").textContent = `${Math.round(weather.main.temp)}°C`;
+        document.getElementById("desc").textContent = weather.weather[0].description;
+        document.getElementById("wind").textContent = weather.wind.speed;
       } catch (err) {
-        console.error('날씨 오류:', err);
+        console.error("정보 불러오기 실패:", err);
       }
     }
 
+    setInterval(updateClock, 1000); // 실시간 시계
+    updateClock();
     fetchData();
     setInterval(fetchData, 5000);
   </script>

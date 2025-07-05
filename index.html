@@ -8,102 +8,115 @@
   <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      overflow: hidden;
-      background: #000;
-      font-family: 'Segoe UI', sans-serif;
-    }
-    #map {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      z-index: 0;
-    }
+    body { margin: 0; padding: 0; height: 100vh; background: black; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+    #map { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 0; }
     #info-bar {
       position: absolute;
       bottom: 0;
       width: 100%;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.9);
       color: white;
       font-size: 1.1rem;
       display: flex;
-      flex-wrap: nowrap;
-      justify-content: space-around;
+      justify-content: center;
+      gap: 1.5rem;
       align-items: center;
-      padding: 10px;
+      padding: 6px 10px;
       z-index: 10;
     }
-    .info-item {
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-    }
+    .info-item { display: flex; align-items: center; gap: 0.3rem; white-space: nowrap; }
   </style>
 </head>
 <body>
   <div id="map"></div>
-
   <div id="info-bar">
     <div class="info-item">⏰ <span id="time">-</span></div>
-    <div class="info-item">📍 정확도: <span id="accuracy">-</span>m</div>
+    <div class="info-item">📏 <span id="distance">0</span>km</div>
     <div class="info-item">🔋 <span id="battery">-</span>%</div>
-    <div class="info-item">🌡️ <span id="temp">-</span>°C</div>
+    <div class="info-item">🌡️ <span id="temp">-</span></div>
     <div class="info-item">☁️ <span id="desc">-</span></div>
     <div class="info-item">🌬️ <span id="wind">-</span> m/s</div>
   </div>
 
   <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoieW9vbmd5OTEiLCJhIjoiY21jcTVjd2hrMDl6OTJpczNtcThvOTB3byJ9.PXjOq69n2cGQq2U-BwWkfg';
-
     const map = new mapboxgl.Map({
       container: 'map',
       style: 'mapbox://styles/mapbox/streets-v11',
       center: [127.02317, 37.62033],
-      zoom: 15
+      zoom: 16,
+      pitch: 0,
+      bearing: 0
     });
 
-    const marker = new mapboxgl.Marker({ color: 'lime' })
-      .setLngLat([127.02317, 37.62033])
-      .addTo(map);
+    const marker = new mapboxgl.Marker({ 
+      element: (() => {
+        const el = document.createElement('img');
+        el.src = 'https://kimsinhwan.github.io/new/custom-marker.png'; // 사용자 마커 이미지
+        el.style.width = '42px';
+        el.style.height = '42px';
+        el.style.borderRadius = '50%';
+        return el;
+      })()
+    }).setLngLat([127.02317, 37.62033]).addTo(map);
+
+    let prevLat = null, prevLng = null, totalDist = 0;
+
+    function formatTime(dateStr) {
+      const d = new Date(dateStr);
+      const h = d.getHours();
+      const m = d.getMinutes();
+      const h12 = h > 12 ? `오후 ${h - 12}` : `오전 ${h}`;
+      return `${h12}:${m.toString().padStart(2, '0')}`;
+    }
+
+    function haversine(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2)**2 + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
 
     async function fetchData() {
       try {
         const res = await fetch('https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec');
         const data = await res.json();
 
-        document.getElementById('time').textContent = new Date(data.timestamp).toLocaleTimeString('ko-KR');
-        document.getElementById('accuracy').textContent = data.accuracy;
+        const lat = parseFloat(data.lat);
+        const lng = parseFloat(data.lng);
+
+        if (prevLat !== null && prevLng !== null) {
+          totalDist += haversine(prevLat, prevLng, lat, lng);
+          document.getElementById('distance').textContent = totalDist.toFixed(2);
+        }
+        prevLat = lat; prevLng = lng;
+
+        marker.setLngLat([lng, lat]);
+        map.flyTo({ center: [lng, lat], speed: 0.8 });
+
+        document.getElementById('time').textContent = formatTime(data.timestamp);
         document.getElementById('battery').textContent = data.battery;
-
-        marker.setLngLat([data.lng, data.lat]);
-        map.flyTo({ center: [data.lng, data.lat], speed: 0.8 });
-
-        fetchWeather(data.lat, data.lng);
+        fetchWeather(lat, lng);
       } catch (e) {
-        console.error('위치 데이터 오류:', e);
+        console.error('데이터 오류:', e);
       }
     }
 
     async function fetchWeather(lat, lon) {
       try {
-        const apiKey = 'a2530b8c9f61aa303ed3dc7ca3d85819';
-        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=kr`;
-        const res = await fetch(url);
+        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=a2530b8c9f61aa303ed3dc7ca3d85819&units=metric&lang=kr`);
         const data = await res.json();
-
-        document.getElementById('temp').textContent = data.main.temp;
+        document.getElementById('temp').textContent = `${Math.round(data.main.temp)}°C`;
         document.getElementById('desc').textContent = data.weather[0].description;
         document.getElementById('wind').textContent = data.wind.speed;
       } catch (err) {
-        console.error('날씨 정보 오류:', err);
+        console.error('날씨 오류:', err);
       }
     }
 
     fetchData();
-    setInterval(fetchData, 5000); // 5초마다 갱신
+    setInterval(fetchData, 5000);
   </script>
 </body>
 </html>
