@@ -1,4 +1,3 @@
-<!-- map.html - 마커 커스텀 및 실시간 지도 -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -8,24 +7,8 @@
   <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
   <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background: black;
-    }
-    #map {
-      width: 100%;
-      height: 100%;
-    }
-    .custom-marker {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: 2px solid white;
-      background-size: cover;
-      background-position: center;
-    }
+    html, body { margin: 0; padding: 0; height: 100%; background: black; }
+    #map { width: 100%; height: 100%; }
   </style>
 </head>
 <body>
@@ -36,19 +19,14 @@
 
     const map = new mapboxgl.Map({
       container: 'map',
-      style: 'mapbox://styles/mapbox/streets-v11',
+      style: 'mapbox://styles/mapbox/streets-v11',  // ▶️ 한국어 지도 원할 경우 아래 주석 참조
       center: [127.02317, 37.62033],
       zoom: 15,
-      pitch: 0,      // 2D 탑다운
-      bearing: 0
+      pitch: 0,       // 🔽 위에서 내려다보는 시야
+      bearing: 0      // ↩️ 북쪽 정렬 (회전 없음)
     });
 
-    // 커스텀 마커 생성
-    const el = document.createElement('div');
-    el.className = 'custom-marker';
-    el.style.backgroundImage = 'url("https://kimsinhwan.github.io/new/marker.png")';
-
-    const marker = new mapboxgl.Marker(el)
+    const marker = new mapboxgl.Marker({ color: 'lime' })
       .setLngLat([127.02317, 37.62033])
       .addTo(map);
 
@@ -57,13 +35,8 @@
         const res = await fetch('https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec');
         const data = await res.json();
         const { lat, lng } = data;
-
         marker.setLngLat([lng, lat]);
-        map.flyTo({
-          center: [lng, lat],
-          speed: 0.8,
-          essential: true
-        });
+        map.flyTo({ center: [lng, lat], speed: 0.8, essential: true });
       } catch (e) {
         console.error('지도 업데이트 실패:', e);
       }
