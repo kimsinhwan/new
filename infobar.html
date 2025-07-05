@@ -54,16 +54,16 @@
 <body>
   <div id="info-bar">
     <div class="info-left">
-      <div class="info-item">⏰ <span id="time">-</span></div>
-      <div class="info-item">📍 <span id="accuracy">-</span>m</div>
-      <div class="info-item">🔋 <span id="battery">-</span>%</div>
+      <div class="info-item" style="color:#4ade80">🟢 Live</div>
+      <div class="info-item">📡 <span id="distance">0</span>km</div>
       <div class="info-item">🌡️ <span id="temp">-</span>°C</div>
       <div class="info-item">☁️ <span id="desc">-</span></div>
       <div class="info-item">🌬️ <span id="wind">-</span> m/s</div>
     </div>
     <div class="info-right">
-      <div class="info-item">📡 <span id="distance">0</span>km</div>
-      <div class="info-item" style="color:#4ade80">🟢 Live</div>
+      <div class="info-item">⏰ <span id="time">-</span></div>
+      <div class="info-item">🔋 <span id="battery">-</span>%</div>
+      <div class="info-item">📍 <span id="accuracy">-</span>m</div>
     </div>
   </div>
 
@@ -92,13 +92,12 @@
         document.getElementById("desc").textContent = data.desc || "-";
         document.getElementById("wind").textContent = data.wind || "-";
 
-        // 거리 계산
         const lat = parseFloat(data.lat);
         const lng = parseFloat(data.lng);
         if (!isNaN(lat) && !isNaN(lng)) {
           if (prevLat !== null && prevLng !== null) {
             const d = calcDistance(prevLat, prevLng, lat, lng);
-            if (d > 0.01) totalDistance += d; // 너무 작으면 무시
+            if (d > 0.01) totalDistance += d;
           }
           prevLat = lat;
           prevLng = lng;
@@ -114,4 +113,17 @@
       const R = 6371;
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLa
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    updateTime();
+    fetchData();
+    setInterval(updateTime, 60000);
+    setInterval(fetchData, 5000);
+  </script>
+</body>
+</html>
