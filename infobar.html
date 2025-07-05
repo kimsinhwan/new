@@ -55,7 +55,7 @@
       width: 3px;
       background: #60a5fa;
       opacity: 0.4;
-      transition: height 0.3s, opacity 0.3s;
+      transition: height 0.3s, opacity 0.3s, background 0.3s;
     }
     .bar.on {
       opacity: 1;
@@ -66,11 +66,15 @@
     .bar4 { height: 17px; }
     .bar5 { height: 21px; }
 
-    /* 유플러스 텍스트 스타일 - 실제 로고 컬러 적용 */
+    .bad-gps {
+      background: #f87171 !important;
+      animation: blink 1s step-start 0s infinite;
+    }
+
     #uplogo {
       font-weight: 700;
       font-size: 1.4rem;
-      color: #ec0b8d; /* 유플러스 로고 색상 */
+      color: #ec0b8d;
       font-family: 'Arial Black', Arial, sans-serif;
       user-select: none;
       cursor: default;
@@ -86,30 +90,13 @@
 </head>
 <body>
   <div id="info-bar">
-    <!-- 1. 유플러스 텍스트 로고 -->
     <div class="info-item" id="uplogo" title="LG U+">U+</div>
-
-    <!-- 2. 시간 -->
     <div class="info-item"><span id="time">-</span></div>
-
-    <!-- 3. 이동거리 -->
     <div class="info-item">🛵 <span id="distance">0.00</span>km</div>
-
-    <!-- 4. 온도 -->
     <div class="info-item">🌡️ <span id="temp">-</span>°C</div>
-
-    <!-- 5. 날씨 -->
     <div class="info-item">☁️ <span id="desc">-</span></div>
-
-    <!-- 6. 바람 -->
     <div class="info-item">🌬️ <span id="wind">-</span> m/s</div>
-
-    <!-- 7. 4G/5G 텍스트 -->
-    <div class="info-item">
-      <span id="network-status">-</span>
-    </div>
-
-    <!-- 8. GPS 감도 막대만 (숫자/텍스트 제거) -->
+    <div class="info-item"><span id="network-status">-</span></div>
     <div class="info-item">
       <div class="signal-bars">
         <div class="bar bar1" id="sig1"></div>
@@ -119,14 +106,10 @@
         <div class="bar bar5" id="sig5"></div>
       </div>
     </div>
-
-    <!-- 9. 배터리 잔량 + 게이지 -->
     <div class="info-item">
       <span id="battery">-</span>%
       <div class="battery-bar"><div id="battery-fill" class="battery-fill"></div></div>
     </div>
-
-    <!-- 10. 라이브 깜박임 점 -->
     <div class="info-item blinking">🔴 Live</div>
   </div>
 
@@ -153,7 +136,12 @@
         else level = 1;
       }
       for (let i = 1; i <= 5; i++) {
-        document.getElementById('sig' + i).classList.toggle('on', i <= level);
+        const el = document.getElementById('sig' + i);
+        el.classList.toggle('on', i <= level);
+        el.classList.remove('bad-gps');
+        if (level <= 2 && i <= level) {
+          el.classList.add('bad-gps');
+        }
       }
     }
 
@@ -172,7 +160,13 @@
         document.getElementById('battery').textContent = data.battery ?? '-';
         updateBatteryFill(data.battery);
 
-        document.getElementById('distance').textContent = (data.distance ?? 0).toFixed(2);
+        const distElem = document.getElementById('distance');
+        const totalKm = parseFloat(data.total_km ?? 0);
+        distElem.textContent = totalKm.toFixed(2);
+
+        if (totalKm < 30) distElem.style.color = '#facc15';
+        else if (totalKm < 70) distElem.style.color = '#4ade80';
+        else distElem.style.color = '#f87171';
 
         document.getElementById('temp').textContent = data.temp ?? '-';
         document.getElementById('desc').textContent = data.desc ?? '-';
@@ -185,9 +179,7 @@
         else if (netVal === '5G') netElem.style.color = '#f87171';
         else netElem.style.color = '#ffffff';
 
-        if (data.accuracy) updateSignalBars(data.accuracy);
-        else updateSignalBars(0);
-
+        updateSignalBars(data.accuracy);
       } catch (e) {
         console.error('하단바 fetch 오류:', e);
       }
