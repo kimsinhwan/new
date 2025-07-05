@@ -22,11 +22,12 @@
       font-size: 0.95rem;
       display: flex;
       flex-wrap: nowrap;
-      justify-content: space-between;
+      justify-content: flex-start; /* ✅ 왼쪽 정렬 */
       align-items: center;
-      padding: 6px 12px;
+      padding: 6px 20px;
       box-sizing: border-box;
       z-index: 9999;
+      gap: 20px; /* 항목 간 여백 */
     }
 
     .info-item {
@@ -34,12 +35,6 @@
       align-items: center;
       gap: 4px;
       white-space: nowrap;
-    }
-
-    .info-left, .info-right {
-      display: flex;
-      gap: 16px;
-      align-items: center;
     }
 
     @media screen and (max-width: 480px) {
@@ -53,18 +48,14 @@
 </head>
 <body>
   <div id="info-bar">
-    <div class="info-left">
-      <div class="info-item" style="color:#4ade80">🟢 Live</div>
-      <div class="info-item">📡 <span id="distance">0</span>km</div>
-      <div class="info-item">🌡️ <span id="temp">-</span>°C</div>
-      <div class="info-item">☁️ <span id="desc">-</span></div>
-      <div class="info-item">🌬️ <span id="wind">-</span> m/s</div>
-    </div>
-    <div class="info-right">
-      <div class="info-item">⏰ <span id="time">-</span></div>
-      <div class="info-item">🔋 <span id="battery">-</span>%</div>
-      <div class="info-item">📍 <span id="accuracy">-</span>m</div>
-    </div>
+    <div class="info-item" style="color:#4ade80">🟢 Live</div>
+    <div class="info-item">📡 <span id="distance">0</span>km</div>
+    <div class="info-item">🌡️ <span id="temp">-</span>°C</div>
+    <div class="info-item">☁️ <span id="desc">-</span></div>
+    <div class="info-item">🌬️ <span id="wind">-</span> m/s</div>
+    <div class="info-item">⏰ <span id="time">-</span></div>
+    <div class="info-item">🔋 <span id="battery">-</span>%</div>
+    <div class="info-item">📍 <span id="accuracy">-</span>m</div>
   </div>
 
   <script>

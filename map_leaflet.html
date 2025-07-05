@@ -1,55 +1,51 @@
+<!-- map.html -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Leaflet Live Map</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <title>Live Map</title>
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
   <style>
     html, body { margin: 0; padding: 0; height: 100%; background: black; }
     #map { width: 100%; height: 100%; }
-    .leaflet-marker-icon.custom-icon {
-      width: 32px !important;
-      height: 32px !important;
-      border-radius: 50%;
-      border: 2px solid white;
-      box-shadow: 0 0 5px #0f0;
-    }
   </style>
 </head>
 <body>
   <div id="map"></div>
-
   <script>
-    const map = L.map('map', {
-      zoomControl: false
-    }).setView([37.62033, 127.02317], 17); // 위에서 내려다보는 2D 고정
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-
-    // 🔵 사용자 마커 아이콘
-    const customIcon = L.icon({
-      iconUrl: 'marker.png', // 🔁 GitHub repo에 있는 marker.png 사용
-      iconSize: [32, 32],
-      className: 'custom-icon'
+    mapboxgl.accessToken = 'pk.eyJ1IjoieW9vbmd5OTEiLCJhIjoiY21jcTVjd2hrMDl6OTJpczNtcThvOTB3byJ9.PXjOq69n2cGQq2U-BwWkfg';
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/streets-v11',
+      center: [127.02317, 37.62033],
+      zoom: 17,
+      pitch: 0,
+      bearing: 0
     });
 
-    const marker = L.marker([37.62033, 127.02317], { icon: customIcon }).addTo(map);
+    const marker = new mapboxgl.Marker({ element: createMarker() })
+      .setLngLat([127.02317, 37.62033])
+      .addTo(map);
+
+    function createMarker() {
+      const img = document.createElement('img');
+      img.src = 'marker.png';
+      img.style.width = '40px';
+      img.style.borderRadius = '50%';
+      return img;
+    }
 
     async function fetchData() {
       try {
         const res = await fetch('https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec');
         const data = await res.json();
-        const lat = parseFloat(data.lat);
-        const lng = parseFloat(data.lng);
-        marker.setLatLng([lat, lng]);
-        map.setView([lat, lng]);
+        const { lat, lng } = data;
+        marker.setLngLat([lng, lat]);
+        map.flyTo({ center: [lng, lat], speed: 0.5 });
       } catch (e) {
-        console.error('데이터 불러오기 실패:', e);
+        console.error('지도 에러:', e);
       }
     }
 
