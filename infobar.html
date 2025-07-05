@@ -77,8 +77,8 @@
   <div id="info-bar">
     <div class="info-item blinking">🔴 Live</div>
 
-    <!-- 4G/5G 네트워크 상태 표시 -->
-    <div class="info-item" id="network-status">-</div>
+    <!-- ✅ 여기에 4G/5G 상태가 Live 옆에 나타남 -->
+    <div class="info-item">📶 <span id="network-status">-</span></div>
 
     <div class="info-item">
       <div class="signal-bars">
@@ -154,10 +154,15 @@
         if (data.accuracy) updateSignalBars(data.accuracy);
         if (data.battery) updateBatteryFill(data.battery);
 
-        // 4G, 5G 네트워크 상태 표시 (없으면 '-'로)
-        document.getElementById('network-status').textContent = data.network || '-';
+        // ✅ 4G / 5G 상태 표시
+        const netElem = document.getElementById('network-status');
+        const netVal = (data.network || '-').toUpperCase();
+        netElem.textContent = netVal;
+        if (netVal === '4G') netElem.style.color = '#60a5fa';
+        else if (netVal === '5G') netElem.style.color = '#f87171';
+        else netElem.style.color = 'white';
 
-        // ✅ 날씨 API 키 실제 적용
+        // ✅ 날씨 처리
         if (data.lat && data.lng) {
           const apiKey = '3e89d241fea1e454d2cf352ce9cde4fe';
           const url = `https://api.openweathermap.org/data/2.5/weather?lat=${data.lat}&lon=${data.lng}&appid=${apiKey}&units=metric&lang=kr`;
