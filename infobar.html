@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Live Info Bar</title>
   <style>
     body {
@@ -48,11 +48,11 @@
     }
     .signal-bars {
       display: inline-flex;
-      align-items: flex-end;
       gap: 2px;
+      flex-direction: column-reverse;
     }
     .bar {
-      width: 3px;
+      width: 4px;
       background: #60a5fa;
       opacity: 0.5;
       transition: height 0.3s, opacity 0.3s;
@@ -61,10 +61,10 @@
       opacity: 1;
     }
     .bar1 { height: 5px; }
-    .bar2 { height: 9px; }
-    .bar3 { height: 13px; }
-    .bar4 { height: 17px; }
-    .bar5 { height: 21px; }
+    .bar2 { height: 8px; }
+    .bar3 { height: 11px; }
+    .bar4 { height: 14px; }
+    .bar5 { height: 17px; }
     @media screen and (max-width: 480px) {
       #info-bar {
         font-size: 0.9rem;
@@ -86,20 +86,17 @@
       </div>
       <span id="gps">-</span> (<span id="gps-text">-</span>)
     </div>
+    <div class="info-item">👁️ <span id="viewer">-</span>명</div>
     <div class="info-item">🛵 <span id="distance">0.00</span>km</div>
     <div class="info-item">🌡️ <span id="temp">-</span>°C</div>
     <div class="info-item">☁️ <span id="desc">-</span></div>
     <div class="info-item">🌬️ <span id="wind">-</span> m/s</div>
     <div class="info-item">⏰ <span id="time">-</span></div>
-    <div class="info-item">🔋 <span id="battery">-</span>% 
-      <div class="battery-bar">
-        <div id="battery-fill" class="battery-fill" style="width:0%"></div>
-      </div>
-    </div>
+    <div class="info-item">🔋 <span id="battery">-</span>% <div class="battery-bar"><div id="battery-fill" class="battery-fill" style="width:0%"></div></div></div>
   </div>
 
   <script>
-    const API_KEY = '3e89d241fea1e454d2cf352ce9cde4fe'; // ← 유효한 OpenWeather API 키
+    const apiKey = "3e89d241fea1e454d2cf352ce9cde4fe";
 
     function updateTime() {
       const now = new Date();
@@ -109,9 +106,6 @@
       const hh = (h % 12 || 12).toString();
       document.getElementById('time').textContent = `${ap} ${hh}:${m}`;
     }
-
-    setInterval(updateTime, 1000);
-    updateTime();
 
     function getSignalText(accuracy) {
       const acc = parseFloat(accuracy);
@@ -147,40 +141,37 @@
 
     async function fetchData() {
       try {
-        const res = await fetch('https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec');
-        const data = await res.json();
+        const infoRes = await fetch('https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec');
+        const info = await infoRes.json();
 
-        const { lat, lng } = data;
-        document.getElementById('battery').textContent = data.battery ?? '-';
-        document.getElementById('gps').textContent = data.accuracy ? `${data.accuracy}m` : '-';
-        document.getElementById('gps-text').textContent = getSignalText(data.accuracy);
-        document.getElementById('distance').textContent = (data.distance ?? 0).toFixed(2);
+        document.getElementById('battery').textContent = info.battery ?? '-';
+        document.getElementById('gps').textContent = info.accuracy ? `${info.accuracy}m` : '-';
+        document.getElementById('gps-text').textContent = getSignalText(info.accuracy);
+        document.getElementById('distance').textContent = (info.distance ?? 0).toFixed(2);
+        document.getElementById('viewer').textContent = info.viewer ?? '-';
 
-        if (data.accuracy) updateSignalBars(data.accuracy);
-        if (data.battery) updateBatteryFill(data.battery);
+        if (info.accuracy) updateSignalBars(info.accuracy);
+        if (info.battery) updateBatteryFill(info.battery);
 
-        fetchWeather(lat, lng);
+        // 날씨 요청
+        if (info.lat && info.lng) {
+          const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${info.lat}&lon=${info.lng}&appid=${apiKey}&units=metric&lang=kr`;
+          const weatherRes = await fetch(weatherUrl);
+          const data = await weatherRes.json();
+          document.getElementById('temp').textContent = data.main.temp;
+          document.getElementById('desc').textContent = data.weather[0].description;
+          document.getElementById('wind').textContent = data.wind.speed;
+        }
       } catch (e) {
         console.error('하단바 fetch 오류:', e);
       }
     }
 
-    async function fetchWeather(lat, lon) {
-      try {
-        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=kr`;
-        const res = await fetch(url);
-        const json = await res.json();
+    setInterval(updateTime, 1000);
+    updateTime();
 
-        document.getElementById('temp').textContent = json.main?.temp ?? '-';
-        document.getElementById('desc').textContent = json.weather?.[0]?.description ?? '-';
-        document.getElementById('wind').textContent = json.wind?.speed ?? '-';
-      } catch (err) {
-        console.error('날씨 정보 오류:', err);
-      }
-    }
-
-    setInterval(fetchData, 5000);
     fetchData();
+    setInterval(fetchData, 5000);
   </script>
 </body>
 </html>
