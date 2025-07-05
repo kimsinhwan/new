@@ -159,8 +159,8 @@
         const netVal = (data.network || '-').toUpperCase().trim();
         netElem.textContent = netVal;
 
-        if (netVal === '4G') netElem.style.color = '#4ade80';
-        else if (netVal === '5G') netElem.style.color = '#f87171';
+        if (netVal === '4G') netElem.style.color = '#4ade80';   // 초록
+        else if (netVal === '5G') netElem.style.color = '#f87171'; // 빨강
         else netElem.style.color = '#ffffff';
 
         if (data.lat && data.lng) {
