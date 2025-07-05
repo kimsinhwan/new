@@ -6,56 +6,48 @@
   <title>Live GPS Dashboard</title>
   <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
   <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    html, body {
+    body {
       margin: 0;
       padding: 0;
-      height: 100%;
+      height: 100vh;
       overflow: hidden;
-      font-family: 'Segoe UI', sans-serif;
     }
     #map {
-      width: 100%;
-      height: 100%;
-    }
-    .info-panel {
       position: absolute;
-      top: 20px;
-      left: 20px;
-      background-color: rgba(255, 255, 255, 0.95);
-      color: #111;
-      padding: 14px 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      font-size: 16px;
-      min-width: 220px;
-      z-index: 999;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 0;
     }
-    .info-panel h2 {
-      margin: 0 0 10px;
-      font-size: 18px;
-      color: #000;
+    #info-bar {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      background: rgba(17, 24, 39, 0.8); /* dark translucent */
+      color: white;
+      font-size: 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 10px;
+      z-index: 10;
     }
-    .info-panel hr {
-      border: none;
-      border-top: 1px solid #ccc;
-      margin: 10px 0;
+    .info-item {
+      margin: 0 15px;
+      white-space: nowrap;
     }
   </style>
 </head>
 <body>
   <div id="map"></div>
 
-  <div class="info-panel">
-    <h2>📌 실시간 위치 추적</h2>
-    ⏰ 시간: <span id="time">-</span><br />
-    🎯 정확도: <span id="accuracy">-</span> m<br />
-    🔋 배터리: <span id="battery">-</span>%<br />
-    <hr />
-    <h2>☁️ 현재 날씨</h2>
-    🌡️ 온도: <span id="temp">-</span>°C<br />
-    🌤️ 상태: <span id="desc">-</span><br />
-    🍃 바람: <span id="wind">-</span> m/s<br />
+  <div id="info-bar">
+    <div class="info-item">⏰ <span id="time">-</span></div>
+    <div class="info-item">📍 정확도: <span id="accuracy">-</span>m</div>
+    <div class="info-item">🔋 <span id="battery">-</span>%</div>
+    <div class="info-item">🌡️ <span id="temp">-</span>°C</div>
+    <div class="info-item">☁️ <span id="desc">-</span></div>
+    <div class="info-item">🌬️ <span id="wind">-</span> m/s</div>
   </div>
 
   <script>
@@ -63,7 +55,9 @@
 
     const map = new mapboxgl.Map({
       container: 'map',
-      style: 'mapbox://styles/mapbox/light-v10',
+      style: 'mapbox://styles/mapbox/streets-v11',
       center: [127.02317, 37.62033],
-      zoom: 14
+      zoom: 15
     });
+
+    const marker =
