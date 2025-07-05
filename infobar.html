@@ -76,7 +76,9 @@
 <body>
   <div id="info-bar">
     <div class="info-item blinking">🔴 Live</div>
+
     <div class="info-item">📶 <span id="network-status">-</span></div>
+
     <div class="info-item">
       <div class="signal-bars">
         <div class="bar bar1" id="sig1"></div>
@@ -142,19 +144,19 @@
       try {
         const res = await fetch('https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec');
         const data = await res.json();
-        console.log('✅ API 응답:', data);
 
         document.getElementById('battery').textContent = data.battery ?? '-';
         document.getElementById('gps').textContent = data.accuracy ? `${data.accuracy}m` : '-';
         document.getElementById('gps-text').textContent = getSignalText(data.accuracy);
-        document.getElementById('distance').textContent = (data.distance ?? 0).toFixed(2);
+
+        const distNum = Number(data.distance ?? 0);
+        document.getElementById('distance').textContent = isNaN(distNum) ? '0.00' : distNum.toFixed(2);
 
         if (data.accuracy) updateSignalBars(data.accuracy);
         if (data.battery) updateBatteryFill(data.battery);
 
         const netElem = document.getElementById('network-status');
         const netVal = (data.network || '-').toUpperCase().trim();
-        console.log('✅ NET VAL:', netVal);
         netElem.textContent = netVal;
 
         if (netVal === '4G') netElem.style.color = '#4ade80';
