@@ -7,110 +7,77 @@
   <style>
     body {
       margin: 0;
-      background: black;
-      color: white;
-      font-family: 'Segoe UI', sans-serif;
+      padding: 0;
+      background: transparent;
     }
 
     #info-bar {
       display: flex;
-      flex-wrap: nowrap;
       justify-content: flex-start;
       align-items: center;
       gap: 16px;
-      padding: 8px 20px;
-      font-size: 1.1rem;
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      font-size: 1rem;
+      padding: 8px 24px; /* ⬅️ 양쪽 여백 추가 */
+      white-space: nowrap;
     }
 
     .info-item {
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      white-space: nowrap;
     }
 
     @media screen and (max-width: 480px) {
       #info-bar {
         font-size: 0.9rem;
-        padding: 6px 12px;
-        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-start;
       }
     }
   </style>
 </head>
 <body>
   <div id="info-bar">
-    <div class="info-item" style="color:#4ade80">🟢 Live</div>
-    <div class="info-item">📡 <span id="distance">0</span>km</div>
+    <div class="info-item" style="color:#4ade80;">🟢 Live 📡</div> <!-- Live + GPS 상태 -->
+    <div class="info-item">🛵 <span id="distance">0.00</span>km</div>
     <div class="info-item">🌡️ <span id="temp">-</span>°C</div>
     <div class="info-item">☁️ <span id="desc">-</span></div>
-    <div class="info-item">🌬️ <span id="wind">-</span> m/s</div>
+    <div class="info-item">💨 <span id="wind">-</span> m/s</div>
     <div class="info-item">⏰ <span id="time">-</span></div>
     <div class="info-item">🔋 <span id="battery">-</span>%</div>
-    <div class="info-item">📍 <span id="accuracy">-</span>m</div>
   </div>
 
   <script>
-    let prevLat = null, prevLng = null;
-    let totalDistance = 0;
-
     function updateTime() {
       const now = new Date();
       const h = now.getHours();
-      const m = now.getMinutes();
+      const m = now.getMinutes().toString().padStart(2, '0');
       const ap = h >= 12 ? '오후' : '오전';
       const hh = (h % 12 || 12).toString();
-      const mm = m.toString().padStart(2, '0');
-      document.getElementById("time").textContent = `${ap} ${hh}:${mm}`;
+      document.getElementById('time').textContent = `${ap} ${hh}:${m}`;
     }
+    setInterval(updateTime, 1000);
+    updateTime();
 
     async function fetchData() {
       try {
         const res = await fetch('https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec');
         const data = await res.json();
 
-        const lat = parseFloat(data.lat);
-        const lng = parseFloat(data.lng);
-        const battery = data.battery;
-        const accuracy = data.accuracy;
-        const temp = data.temp || "-";
-        const desc = data.desc || "-";
-        const wind = data.wind || "-";
-
-        // 누적 거리 계산
-        if (prevLat !== null && prevLng !== null) {
-          const R = 6371e3;
-          const φ1 = prevLat * Math.PI / 180;
-          const φ2 = lat * Math.PI / 180;
-          const Δφ = (lat - prevLat) * Math.PI / 180;
-          const Δλ = (lng - prevLng) * Math.PI / 180;
-
-          const a = Math.sin(Δφ/2)**2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2)**2;
-          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-          const d = R * c;
-
-          totalDistance += d;
-        }
-
-        prevLat = lat;
-        prevLng = lng;
-
-        document.getElementById("distance").textContent = (totalDistance / 1000).toFixed(2);
-        document.getElementById("battery").textContent = battery;
-        document.getElementById("accuracy").textContent = accuracy;
-        document.getElementById("temp").textContent = temp;
-        document.getElementById("desc").textContent = desc;
-        document.getElementById("wind").textContent = wind;
+        document.getElementById('temp').textContent = data.temp ?? '-';
+        document.getElementById('desc').textContent = data.desc ?? '-';
+        document.getElementById('wind').textContent = data.wind ?? '-';
+        document.getElementById('battery').textContent = data.battery ?? '-';
+        document.getElementById('distance').textContent = (data.distance ?? 0).toFixed(2);
       } catch (e) {
-        console.error('정보 가져오기 실패:', e);
+        console.error('하단바 fetch 오류:', e);
       }
     }
 
-    updateTime();
-    setInterval(updateTime, 10000);
-    fetchData();
     setInterval(fetchData, 5000);
+    fetchData();
   </script>
 </body>
 </html>
