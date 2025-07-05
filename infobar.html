@@ -77,7 +77,8 @@
   <div id="info-bar">
     <div class="info-item blinking">🔴 Live</div>
 
-    <div class="info-item">📶 <span id="network-status">-</span></div>
+    <!-- 여기서 📶 아이콘 제거 -->
+    <div class="info-item"><span id="network-status">-</span></div>
 
     <div class="info-item">
       <div class="signal-bars">
@@ -145,6 +146,9 @@
         const res = await fetch('https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec');
         const data = await res.json();
 
+        console.log("✅ API 응답:", data);
+        console.log("✅ NET VAL:", data.network);
+
         document.getElementById('battery').textContent = data.battery ?? '-';
         document.getElementById('gps').textContent = data.accuracy ? `${data.accuracy}m` : '-';
         document.getElementById('gps-text').textContent = getSignalText(data.accuracy);
@@ -156,7 +160,14 @@
         if (data.battery) updateBatteryFill(data.battery);
 
         const netElem = document.getElementById('network-status');
-        const netVal = (data.network || '-').toUpperCase().trim();
+        const netValRaw = (data.network || '-').toString().toUpperCase().trim();
+
+        // 5G가 안 뜨는 문제 방지용
+        let netVal = netValRaw;
+        if (netVal.includes('5G')) netVal = '5G';
+        else if (netVal.includes('4G')) netVal = '4G';
+        else netVal = '-';
+
         netElem.textContent = netVal;
 
         if (netVal === '4G') netElem.style.color = '#4ade80';   // 초록
