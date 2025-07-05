@@ -3,107 +3,115 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Live Info Bar</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Info Bar</title>
   <style>
     body {
       margin: 0;
-      background: black;
+      padding: 0;
+      background: transparent;
       font-family: 'Segoe UI', sans-serif;
-      color: white;
     }
+
     #info-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      font-size: 0.95rem;
       display: flex;
+      flex-wrap: nowrap;
       justify-content: space-between;
       align-items: center;
-      padding: 10px 24px; /* 좌우 여백 */
-      background: rgba(0, 0, 0, 0.85);
-      font-size: 1.05rem;
-      white-space: nowrap;
-      gap: 18px;
+      padding: 6px 12px;
+      box-sizing: border-box;
+      z-index: 9999;
     }
+
     .info-item {
       display: flex;
       align-items: center;
-      gap: 0.3rem;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .info-left, .info-right {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    @media screen and (max-width: 480px) {
+      #info-bar {
+        font-size: 0.8rem;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
     }
   </style>
 </head>
 <body>
   <div id="info-bar">
-    <div class="info-item">⏰ <span id="time">-</span></div>
-    <div class="info-item">📶 GPS: <span id="gps">-</span></div>
-    <div class="info-item">🔋 <span id="battery">-</span>%</div>
-    <div class="info-item">🌡️ <span id="temp">-</span>°C</div>
-    <div class="info-item">☁️ <span id="desc">-</span></div>
-    <div class="info-item">🌬️ <span id="wind">-</span> m/s</div>
-    <div class="info-item">📍 총 이동: <span id="distance">0.00</span> km</div>
-    <div class="info-item text-green-400 font-semibold">🔴 LIVE</div>
+    <div class="info-left">
+      <div class="info-item">⏰ <span id="time">-</span></div>
+      <div class="info-item">📍 <span id="accuracy">-</span>m</div>
+      <div class="info-item">🔋 <span id="battery">-</span>%</div>
+      <div class="info-item">🌡️ <span id="temp">-</span>°C</div>
+      <div class="info-item">☁️ <span id="desc">-</span></div>
+      <div class="info-item">🌬️ <span id="wind">-</span> m/s</div>
+    </div>
+    <div class="info-right">
+      <div class="info-item">📡 <span id="distance">0</span>km</div>
+      <div class="info-item" style="color:#4ade80">🟢 Live</div>
+    </div>
   </div>
 
   <script>
     let prevLat = null, prevLng = null;
     let totalDistance = 0;
 
-    function getKoreanTime() {
+    function updateTime() {
       const now = new Date();
       const h = now.getHours();
-      const m = now.getMinutes().toString().padStart(2, '0');
-      const isPM = h >= 12;
-      const hour12 = h % 12 || 12;
-      return `오${isPM ? '후' : '전'} ${hour12}:${m}`;
-    }
-
-    function getDistance(lat1, lon1, lat2, lon2) {
-      const R = 6371;
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLat/2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) ** 2;
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return R * c;
+      const m = now.getMinutes();
+      const ap = h >= 12 ? '오후' : '오전';
+      const hh = (h % 12 || 12).toString();
+      const mm = m.toString().padStart(2, '0');
+      document.getElementById("time").textContent = `${ap} ${hh}:${mm}`;
     }
 
     async function fetchData() {
       try {
-        const res = await fetch('https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec');
+        const res = await fetch("https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec");
         const data = await res.json();
 
-        // 시간
-        document.getElementById('time').textContent = getKoreanTime();
-
-        // 배터리
-        document.getElementById('battery').textContent = data.battery;
-
-        // GPS 정확도 기반 상태
-        const acc = parseFloat(data.accuracy);
-        const gpsQuality = acc < 10 ? '매우 좋음' : acc < 25 ? '좋음' : acc < 50 ? '보통' : '나쁨';
-        document.getElementById('gps').textContent = gpsQuality;
+        document.getElementById("accuracy").textContent = data.accuracy || "-";
+        document.getElementById("battery").textContent = data.battery || "-";
+        document.getElementById("temp").textContent = data.temp || "-";
+        document.getElementById("desc").textContent = data.desc || "-";
+        document.getElementById("wind").textContent = data.wind || "-";
 
         // 거리 계산
         const lat = parseFloat(data.lat);
         const lng = parseFloat(data.lng);
-        if (prevLat !== null && prevLng !== null) {
-          const d = getDistance(prevLat, prevLng, lat, lng);
-          if (d < 1) totalDistance += d; // 1km 이상이면 무시
+        if (!isNaN(lat) && !isNaN(lng)) {
+          if (prevLat !== null && prevLng !== null) {
+            const d = calcDistance(prevLat, prevLng, lat, lng);
+            if (d > 0.01) totalDistance += d; // 너무 작으면 무시
+          }
+          prevLat = lat;
+          prevLng = lng;
+          document.getElementById("distance").textContent = totalDistance.toFixed(2);
         }
-        prevLat = lat;
-        prevLng = lng;
 
-        document.getElementById('distance').textContent = totalDistance.toFixed(2);
-
-        // 날씨
-        const wres = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=a2530b8c9f61aa303ed3dc7ca3d85819&units=metric&lang=kr`);
-        const wdata = await wres.json();
-        document.getElementById('temp').textContent = wdata.main.temp.toFixed(0);
-        document.getElementById('desc').textContent = wdata.weather[0].description;
-        document.getElementById('wind').textContent = wdata.wind.speed;
       } catch (e) {
-        console.error('정보 불러오기 오류:', e);
+        console.error("정보 불러오기 실패:", e);
       }
     }
 
-    fetchData();
-    setInterval(fetchData, 5000);
-  </script>
-</body>
-</html>
+    function calcDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLa
