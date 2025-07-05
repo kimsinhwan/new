@@ -1,49 +1,84 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Live Map</title>
-  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Info Bar</title>
   <style>
-    html, body { margin: 0; padding: 0; height: 100%; background: black; }
-    #map { width: 100%; height: 100%; }
+    body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    #info-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      font-size: 0.95rem;
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 6px 20px;
+      box-sizing: border-box;
+      z-index: 9999;
+      gap: 20px;
+    }
+
+    .info-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    @media screen and (max-width: 480px) {
+      #info-bar {
+        font-size: 0.8rem;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
   </style>
 </head>
 <body>
-  <div id="map"></div>
+  <div id="info-bar">
+    <div class="info-item" style="color:#4ade80">🟢 Live</div>
+    <div class="info-item">📡 <span id="distance">0</span>km</div>
+    <div class="info-item">🌡️ <span id="temp">-</span>°C</div>
+    <div class="info-item">☁️ <span id="desc">-</span></div>
+    <div class="info-item">🌬️ <span id="wind">-</span> m/s</div>
+    <div class="info-item">⏰ <span id="time">-</span></div>
+    <div class="info-item">🔋 <span id="battery">-</span>%</div>
+    <div class="info-item">📍 <span id="accuracy">-</span>m</div>
+  </div>
 
   <script>
-    mapboxgl.accessToken = 'pk.eyJ1IjoieW9vbmd5OTEiLCJhIjoiY21jcTVjd2hrMDl6OTJpczNtcThvOTB3byJ9.PXjOq69n2cGQq2U-BwWkfg';
+    let prevLat = null, prevLng = null;
+    let totalDistance = 0;
 
-    const map = new mapboxgl.Map({
-      container: 'map',
-      style: 'mapbox://styles/mapbox/streets-v11',  // ▶️ 한국어 지도 원할 경우 아래 주석 참조
-      center: [127.02317, 37.62033],
-      zoom: 15,
-      pitch: 0,       // 🔽 위에서 내려다보는 시야
-      bearing: 0      // ↩️ 북쪽 정렬 (회전 없음)
-    });
-
-    const marker = new mapboxgl.Marker({ color: 'lime' })
-      .setLngLat([127.02317, 37.62033])
-      .addTo(map);
+    function updateTime() {
+      const now = new Date();
+      const h = now.getHours();
+      const m = now.getMinutes();
+      const ap = h >= 12 ? '오후' : '오전';
+      const hh = (h % 12 || 12).toString();
+      const mm = m.toString().padStart(2, '0');
+      document.getElementById("time").textContent = `${ap} ${hh}:${mm}`;
+    }
 
     async function fetchData() {
       try {
-        const res = await fetch('https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec');
+        const res = await fetch("https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec");
         const data = await res.json();
-        const { lat, lng } = data;
-        marker.setLngLat([lng, lat]);
-        map.flyTo({ center: [lng, lat], speed: 0.8, essential: true });
-      } catch (e) {
-        console.error('지도 업데이트 실패:', e);
-      }
-    }
 
-    fetchData();
-    setInterval(fetchData, 5000);
-  </script>
-</body>
-</html>
+        document.getElementById("accuracy").textContent = data.accuracy || "-";
+        document.getElementById("battery").textContent = data.battery || "-";
+        document.getElementById("temp").textContent = data.temp || "-";
+        document.getElementById("desc").textContent = data.desc || "-";
+        docum
