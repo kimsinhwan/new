@@ -71,22 +71,19 @@
 
     async function fetchData() {
       try {
-        const res = await fetch('https://script.google.com/macros/s/AKfycbx0OCwYiZd-Vs7V3dSY-yourscriptIDhere/exec'); // 수정: Apps Script의 doGet URL로 대체
+        const res = await fetch('https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec');
         const data = await res.json();
 
-        document.getElementById('time').textContent = data.timestamp || '-';
-        document.getElementById('accuracy').textContent = data.accuracy || '-';
-        document.getElementById('battery').textContent = data.battery || '-';
+        document.getElementById('time').textContent = new Date(data.timestamp).toLocaleTimeString('ko-KR');
+        document.getElementById('accuracy').textContent = data.accuracy;
+        document.getElementById('battery').textContent = data.battery;
 
-        const lat = parseFloat(data.lat);
-        const lng = parseFloat(data.lng);
+        marker.setLngLat([data.lng, data.lat]);
+        map.flyTo({ center: [data.lng, data.lat], speed: 0.8 });
 
-        marker.setLngLat([lng, lat]);
-        map.flyTo({ center: [lng, lat], speed: 0.8 });
-
-        fetchWeather(lat, lng);
+        fetchWeather(data.lat, data.lng);
       } catch (e) {
-        console.error('데이터 오류:', e);
+        console.error('위치 데이터 오류:', e);
       }
     }
 
@@ -97,16 +94,16 @@
         const res = await fetch(url);
         const data = await res.json();
 
-        document.getElementById('temp').textContent = data.main?.temp ?? '-';
-        document.getElementById('desc').textContent = data.weather?.[0]?.description ?? '-';
-        document.getElementById('wind').textContent = data.wind?.speed ?? '-';
+        document.getElementById('temp').textContent = data.main.temp;
+        document.getElementById('desc').textContent = data.weather[0].description;
+        document.getElementById('wind').textContent = data.wind.speed;
       } catch (err) {
         console.error('날씨 정보 오류:', err);
       }
     }
 
     fetchData();
-    setInterval(fetchData, 10000); // 10초 주기 갱신
+    setInterval(fetchData, 5000); // 5초마다 갱신
   </script>
 </body>
 </html>
