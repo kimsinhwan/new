@@ -75,8 +75,30 @@
 </head>
 <body>
   <div id="info-bar">
+    <!-- 1. 라이브 점 (깜박임) -->
     <div class="info-item blinking">🔴 Live</div>
-    <div class="info-item">📶 <span id="network-status">-</span></div>
+
+    <!-- 2. 이동거리 -->
+    <div class="info-item">🛵 <span id="distance">0.00</span>km</div>
+
+    <!-- 3. 온도 -->
+    <div class="info-item">🌡️ <span id="temp">-</span>°C</div>
+
+    <!-- 4. 날씨 -->
+    <div class="info-item">☁️ <span id="desc">-</span></div>
+
+    <!-- 5. 바람 -->
+    <div class="info-item">🌬️ <span id="wind">-</span> m/s</div>
+
+    <!-- 6. 시간 (아이콘 제거) -->
+    <div class="info-item"><span id="time">-</span></div>
+
+    <!-- 7. 4G/5G 텍스트만, 아이콘 제거 -->
+    <div class="info-item">
+      <span id="network-status">-</span>
+    </div>
+
+    <!-- 8. GPS 감도 -->
     <div class="info-item">
       <div class="signal-bars">
         <div class="bar bar1" id="sig1"></div>
@@ -87,14 +109,10 @@
       </div>
       <span id="gps">-</span> (<span id="gps-text">-</span>)
     </div>
-    <div class="info-item">🛵 <span id="distance">0.00</span>km</div>
-    <div class="info-item">🌡️ <span id="temp">-</span>°C</div>
-    <div class="info-item">☁️ <span id="desc">-</span></div>
-    <div class="info-item">🌬️ <span id="wind">-</span> m/s</div>
-    <div class="info-item">⏰ <span id="time">-</span></div>
-    <!-- 배터리 아이콘 제거된 부분 -->
+
+    <!-- 9. 배터리 잔량 + 게이지바 -->
     <div class="info-item">
-      <span id="battery">-</span>% 
+      <span id="battery">-</span>%
       <div class="battery-bar"><div id="battery-fill" class="battery-fill"></div></div>
     </div>
   </div>
