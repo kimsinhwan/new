@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Info Bar</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    #info-bar {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      color: white;
+      font-size: 1.2rem;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 10px;
+    }
+    .info-item {
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="info-bar">
+    <div class="info-item">⏰ <span id="time">-</span></div>
+    <div class="info-item">📍 정확도: <span id="accuracy">-</span>m</div>
+    <div class="info-item">🔋 <span id="battery">-</span>%</div>
+    <div class="info-item">🌡️ <span id="temp">-</span>°C</div>
+    <div class="info-item">☁️ <span id="desc">-</span></div>
+    <div class="info-item">🌬️ <span id="wind">-</span> m/s</div>
+  </div>
+
+  <script>
+    async function fetchData() {
+      try {
+        const res = await fetch('https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec');
+        const data = await res.json();
+
+        document.getElementById('time').textContent = new Date(data.timestamp).toLocaleTimeString();
+        document.getElementById('accuracy').textContent = data.accuracy || '-';
+        document.getElementById('battery').textContent = data.battery || '-';
+
+        fetchWeather(data.lat, data.lng);
+      } catch (e) {
+        console.error('정보 바 오류:', e);
+      }
+    }
+
+    async function fetchWeather(lat, lon) {
+      try {
+        const key = 'a2530b8c9f61aa303ed3dc7ca3d85819';
+        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${key}&units=metric&lang=kr`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        document.getElementById('temp').textContent = data.main.temp;
+        document.getElementById('desc').textContent = data.weather[0].description;
+        document.getElementById('wind').textContent = data.wind.speed;
+      } catch (err) {
+        console.error('날씨 오류:', err);
+      }
+    }
+
+    fetchData();
+    setInterval(fetchData, 5000);
+  </script>
+</body>
+</html>
