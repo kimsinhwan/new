@@ -47,11 +47,13 @@
       transition: width 0.5s ease;
     }
     .signal-bars {
-      display: inline-flex;
+      display: flex;
+      flex-direction: column-reverse;
+      justify-content: flex-end;
       gap: 2px;
     }
     .bar {
-      width: 3px;
+      width: 4px;
       background: #60a5fa;
       opacity: 0.5;
       transition: height 0.3s, opacity 0.3s;
@@ -77,11 +79,11 @@
     <div class="info-item blinking">🔴 Live</div>
     <div class="info-item">
       <div class="signal-bars">
-        <div class="bar bar1" id="sig1"></div>
-        <div class="bar bar2" id="sig2"></div>
-        <div class="bar bar3" id="sig3"></div>
-        <div class="bar bar4" id="sig4"></div>
         <div class="bar bar5" id="sig5"></div>
+        <div class="bar bar4" id="sig4"></div>
+        <div class="bar bar3" id="sig3"></div>
+        <div class="bar bar2" id="sig2"></div>
+        <div class="bar bar1" id="sig1"></div>
       </div>
       <span id="gps">-</span> (<span id="gps-text">-</span>)
     </div>
@@ -90,7 +92,10 @@
     <div class="info-item">☁️ <span id="desc">-</span></div>
     <div class="info-item">🌬️ <span id="wind">-</span> m/s</div>
     <div class="info-item">⏰ <span id="time">-</span></div>
-    <div class="info-item">🔋 <span id="battery">-</span>% <div class="battery-bar"><div id="battery-fill" class="battery-fill" style="width:0%"></div></div></div>
+    <div class="info-item">
+      🔋 <span id="battery">-</span>%
+      <div class="battery-bar"><div id="battery-fill" class="battery-fill" style="width:0%"></div></div>
+    </div>
   </div>
 
   <script>
@@ -155,6 +160,7 @@
         console.error('하단바 fetch 오류:', e);
       }
     }
+
     setInterval(fetchData, 5000);
     fetchData();
   </script>
