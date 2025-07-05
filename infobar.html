@@ -1,37 +1,30 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Info Bar</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Info Bar</title>
   <style>
     body {
       margin: 0;
-      padding: 0;
-      background: transparent;
+      background: black;
+      color: white;
       font-family: 'Segoe UI', sans-serif;
     }
 
     #info-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      font-size: 0.95rem;
       display: flex;
       flex-wrap: nowrap;
       justify-content: flex-start;
       align-items: center;
-      padding: 6px 20px;
-      box-sizing: border-box;
-      z-index: 9999;
-      gap: 20px;
+      gap: 16px;
+      padding: 8px 20px;
+      font-size: 1.1rem;
+      background: rgba(0, 0, 0, 0.85);
     }
 
     .info-item {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 4px;
       white-space: nowrap;
@@ -39,9 +32,9 @@
 
     @media screen and (max-width: 480px) {
       #info-bar {
-        font-size: 0.8rem;
-        flex-wrap: wrap;
-        justify-content: center;
+        font-size: 0.9rem;
+        padding: 6px 12px;
+        gap: 10px;
       }
     }
   </style>
@@ -74,46 +67,49 @@
 
     async function fetchData() {
       try {
-        const res = await fetch("https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec");
+        const res = await fetch('https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec');
         const data = await res.json();
-
-        document.getElementById("accuracy").textContent = data.accuracy || "-";
-        document.getElementById("battery").textContent = data.battery || "-";
-        document.getElementById("temp").textContent = data.temp || "-";
-        document.getElementById("desc").textContent = data.desc || "-";
-        document.getElementById("wind").textContent = data.wind || "-";
 
         const lat = parseFloat(data.lat);
         const lng = parseFloat(data.lng);
-        if (!isNaN(lat) && !isNaN(lng)) {
-          if (prevLat !== null && prevLng !== null) {
-            const d = calcDistance(prevLat, prevLng, lat, lng);
-            if (d > 0.01) totalDistance += d;
-          }
-          prevLat = lat;
-          prevLng = lng;
-          document.getElementById("distance").textContent = totalDistance.toFixed(2);
+        const battery = data.battery;
+        const accuracy = data.accuracy;
+        const temp = data.temp || "-";
+        const desc = data.desc || "-";
+        const wind = data.wind || "-";
+
+        // 누적 거리 계산
+        if (prevLat !== null && prevLng !== null) {
+          const R = 6371e3;
+          const φ1 = prevLat * Math.PI / 180;
+          const φ2 = lat * Math.PI / 180;
+          const Δφ = (lat - prevLat) * Math.PI / 180;
+          const Δλ = (lng - prevLng) * Math.PI / 180;
+
+          const a = Math.sin(Δφ/2)**2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2)**2;
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          const d = R * c;
+
+          totalDistance += d;
         }
 
+        prevLat = lat;
+        prevLng = lng;
+
+        document.getElementById("distance").textContent = (totalDistance / 1000).toFixed(2);
+        document.getElementById("battery").textContent = battery;
+        document.getElementById("accuracy").textContent = accuracy;
+        document.getElementById("temp").textContent = temp;
+        document.getElementById("desc").textContent = desc;
+        document.getElementById("wind").textContent = wind;
       } catch (e) {
-        console.error("정보 불러오기 실패:", e);
+        console.error('정보 가져오기 실패:', e);
       }
     }
 
-    function calcDistance(lat1, lon1, lat2, lon2) {
-      const R = 6371;
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c;
-    }
-
     updateTime();
+    setInterval(updateTime, 10000);
     fetchData();
-    setInterval(updateTime, 60000);
     setInterval(fetchData, 5000);
   </script>
 </body>
