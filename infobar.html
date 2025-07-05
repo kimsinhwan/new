@@ -76,10 +76,7 @@
 <body>
   <div id="info-bar">
     <div class="info-item blinking">🔴 Live</div>
-
-    <!-- ✅ 여기에 4G/5G 상태 -->
     <div class="info-item">📶 <span id="network-status">-</span></div>
-
     <div class="info-item">
       <div class="signal-bars">
         <div class="bar bar1" id="sig1"></div>
@@ -145,6 +142,7 @@
       try {
         const res = await fetch('https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec');
         const data = await res.json();
+        console.log('✅ API 응답:', data);
 
         document.getElementById('battery').textContent = data.battery ?? '-';
         document.getElementById('gps').textContent = data.accuracy ? `${data.accuracy}m` : '-';
@@ -154,16 +152,15 @@
         if (data.accuracy) updateSignalBars(data.accuracy);
         if (data.battery) updateBatteryFill(data.battery);
 
-        // ✅ 4G / 5G 상태 표시
         const netElem = document.getElementById('network-status');
         const netVal = (data.network || '-').toUpperCase().trim();
+        console.log('✅ NET VAL:', netVal);
         netElem.textContent = netVal;
 
-        if (netVal === '4G') netElem.style.color = '#4ade80';  // 초록
-        else if (netVal === '5G') netElem.style.color = '#f87171';  // 빨강
+        if (netVal === '4G') netElem.style.color = '#4ade80';
+        else if (netVal === '5G') netElem.style.color = '#f87171';
         else netElem.style.color = '#ffffff';
 
-        // ✅ 날씨 처리
         if (data.lat && data.lng) {
           const apiKey = '3e89d241fea1e454d2cf352ce9cde4fe';
           const url = `https://api.openweathermap.org/data/2.5/weather?lat=${data.lat}&lon=${data.lng}&appid=${apiKey}&units=metric&lang=kr`;
