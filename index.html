@@ -1,89 +1,61 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-  <meta charset="utf-8">
-  <title>실시간 위치 지도</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live GPS Dashboard</title>
   <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
   <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
   <style>
-    body { margin: 0; font-family: sans-serif; background: rgba(0,0,0,0); color: white; }
-    #map { width: 100vw; height: 60vh; }
-    #info {
-      background: rgba(0, 0, 0, 0.5);
-      padding: 10px;
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Segoe UI', '맑은 고딕', sans-serif;
+      background: #ffffff;
+    }
+    #map {
+      position: absolute;
+      top: 0; bottom: 0; left: 0; right: 0;
+      z-index: 0;
+    }
+    .info {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(255,255,255,0.95);
+      padding: 16px 24px;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.2);
       font-size: 16px;
+      z-index: 10;
+      line-height: 1.6;
+    }
+    .info h2 {
+      margin: 0 0 8px;
+      font-size: 20px;
+      color: #111827;
+    }
+    .label {
+      font-weight: bold;
+      margin-right: 6px;
     }
   </style>
 </head>
 <body>
   <div id="map"></div>
-  <div id="info">
-    <div>이동 거리: <span id="distance">0</span> km</div>
-    <div>배터리: <span id="battery">-</span>%</div>
-    <div>시간: <span id="time">--:--:--</span></div>
+
+  <div class="info">
+    <h2>📍 실시간 위치 추적</h2>
+    <div><span class="label">⏱️ 시간:</span><span id="time">-</span></div>
+    <div><span class="label">📏 정확도:</span><span id="accuracy">-</span> m</div>
+    <div><span class="label">🔋 배터리:</span><span id="battery">-</span>%</div>
+    <hr style="margin: 12px 0;" />
+    <h2>🌤️ 현재 날씨</h2>
+    <div><span class="label">🌡️ 온도:</span><span id="temp">-</span>°C</div>
+    <div><span class="label">☁️ 상태:</span><span id="desc">-</span></div>
+    <div><span class="label">💨 바람:</span><span id="wind">-</span> m/s</div>
   </div>
 
   <script>
-    mapboxgl.accessToken = 'pk.eyJ1IjoieW9vbmd5OTEiLCJhIjoiY21jMDczMzV1MXg0YTJqbjFiazMzdWI0ciJ9.1553HcxLbM-BN_v6t5d3zg'; // 🔴 반드시 발급받은 토큰으로 바꿔야 함!
-    const map = new mapboxgl.Map({
-      container: 'map',
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: [127.024612, 37.532600], // 초기 좌표 (서울)
-      zoom: 14
-    });
-
-    const marker = new mapboxgl.Marker({ color: 'red' }).setLngLat([127.024612, 37.532600]).addTo(map);
-
-    let prevCoords = null;
-    let totalDistance = 0;
-
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-      const R = 6371; // km
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return R * c;
-    }
-
-    navigator.geolocation.watchPosition(pos => {
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
-
-      marker.setLngLat([lon, lat]);
-      map.setCenter([lon, lat]);
-
-      if (prevCoords) {
-        const dist = calculateDistance(prevCoords.lat, prevCoords.lon, lat, lon);
-        totalDistance += dist;
-        document.getElementById("distance").textContent = totalDistance.toFixed(2);
-      }
-      prevCoords = { lat, lon };
-    }, err => {
-      console.error("위치 접근 실패:", err);
-    }, {
-      enableHighAccuracy: true
-    });
-
-    // 시간 표시
-    setInterval(() => {
-      const now = new Date();
-      document.getElementById("time").textContent = now.toLocaleTimeString();
-    }, 1000);
-
-    // 배터리 잔량 표시
-    if (navigator.getBattery) {
-      navigator.getBattery().then(battery => {
-        function updateBattery() {
-          document.getElementById("battery").textContent = Math.round(battery.level * 100);
-        }
-        battery.addEventListener('levelchange', updateBattery);
-        updateBattery();
-      });
-    }
-  </script>
-</body>
-</html>
+    mapboxgl.accessToken = 'pk.eyJ1IjoieW9vbmd5OTEiLCJhIjoiY21jMDczMzV1MXg0YTJqbjFiazMzdWI0ciJ9.1553HcxLbM-BN_v6t5_
