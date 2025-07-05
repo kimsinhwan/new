@@ -77,7 +77,7 @@
   <div id="info-bar">
     <div class="info-item blinking">🔴 Live</div>
 
-    <!-- ✅ 여기에 4G/5G 상태가 Live 옆에 나타남 -->
+    <!-- ✅ 여기에 4G/5G 상태 -->
     <div class="info-item">📶 <span id="network-status">-</span></div>
 
     <div class="info-item">
@@ -156,11 +156,12 @@
 
         // ✅ 4G / 5G 상태 표시
         const netElem = document.getElementById('network-status');
-        const netVal = (data.network || '-').toUpperCase();
+        const netVal = (data.network || '-').toUpperCase().trim();
         netElem.textContent = netVal;
-        if (netVal === '4G') netElem.style.color = '#60a5fa';
-        else if (netVal === '5G') netElem.style.color = '#f87171';
-        else netElem.style.color = 'white';
+
+        if (netVal === '4G') netElem.style.color = '#4ade80';  // 초록
+        else if (netVal === '5G') netElem.style.color = '#f87171';  // 빨강
+        else netElem.style.color = '#ffffff';
 
         // ✅ 날씨 처리
         if (data.lat && data.lng) {
