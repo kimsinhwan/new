@@ -3,26 +3,42 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Leaflet Map</title>
+  <title>Leaflet Live Map</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     html, body { margin: 0; padding: 0; height: 100%; background: black; }
     #map { width: 100%; height: 100%; }
+    .leaflet-marker-icon.custom-icon {
+      width: 32px !important;
+      height: 32px !important;
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 0 5px #0f0;
+    }
   </style>
 </head>
 <body>
   <div id="map"></div>
 
   <script>
-    const map = L.map('map').setView([37.62033, 127.02317], 17); // 2D 한글 지도
+    const map = L.map('map', {
+      zoomControl: false
+    }).setView([37.62033, 127.02317], 17); // 위에서 내려다보는 2D 고정
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    const marker = L.marker([37.62033, 127.02317]).addTo(map);
+    // 🔵 사용자 마커 아이콘
+    const customIcon = L.icon({
+      iconUrl: 'marker.png', // 🔁 GitHub repo에 있는 marker.png 사용
+      iconSize: [32, 32],
+      className: 'custom-icon'
+    });
+
+    const marker = L.marker([37.62033, 127.02317], { icon: customIcon }).addTo(map);
 
     async function fetchData() {
       try {
