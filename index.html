@@ -71,27 +71,22 @@
 
     async function fetchData() {
       try {
-        const res = await fetch('https://docs.google.com/spreadsheets/d/1zhJpMY2Txv1YMER2dxjRtJIO7s3Y0mxAS2Ec_AvM65Q/gviz/tq?tqx=out:json');
-        const text = await res.text();
-        const json = JSON.parse(text.substring(47).slice(0, -2));
+        const res = await fetch('https://script.google.com/macros/s/AKfycbx0OCwYiZd-Vs7V3dSY-yourscriptIDhere/exec'); // 수정: Apps Script의 doGet URL로 대체
+        const data = await res.json();
 
-        const row = json.table.rows.at(-1).c;
-        const time = row[0]?.f;
-        const lat = parseFloat(row[1]?.v);
-        const lng = parseFloat(row[2]?.v);
-        const acc = row[3]?.v;
-        const bat = row[4]?.v;
+        document.getElementById('time').textContent = data.timestamp || '-';
+        document.getElementById('accuracy').textContent = data.accuracy || '-';
+        document.getElementById('battery').textContent = data.battery || '-';
 
-        document.getElementById('time').textContent = time;
-        document.getElementById('accuracy').textContent = acc;
-        document.getElementById('battery').textContent = bat;
+        const lat = parseFloat(data.lat);
+        const lng = parseFloat(data.lng);
 
         marker.setLngLat([lng, lat]);
         map.flyTo({ center: [lng, lat], speed: 0.8 });
 
         fetchWeather(lat, lng);
       } catch (e) {
-        console.error('위치 데이터 오류:', e);
+        console.error('데이터 오류:', e);
       }
     }
 
@@ -102,16 +97,16 @@
         const res = await fetch(url);
         const data = await res.json();
 
-        document.getElementById('temp').textContent = data.main.temp;
-        document.getElementById('desc').textContent = data.weather[0].description;
-        document.getElementById('wind').textContent = data.wind.speed;
+        document.getElementById('temp').textContent = data.main?.temp ?? '-';
+        document.getElementById('desc').textContent = data.weather?.[0]?.description ?? '-';
+        document.getElementById('wind').textContent = data.wind?.speed ?? '-';
       } catch (err) {
         console.error('날씨 정보 오류:', err);
       }
     }
 
     fetchData();
-    setInterval(fetchData, 5000); // 🔄 5초 주기
+    setInterval(fetchData, 10000); // 10초 주기 갱신
   </script>
 </body>
 </html>
