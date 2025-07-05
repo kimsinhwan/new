@@ -3,44 +3,58 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Live GPS Weather Dashboard</title>
-
-  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+  <title>Live GPS Dashboard</title>
   <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-  
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
   <style>
-    body, html { margin:0; padding:0; height:100%; }
-    #map { position:absolute; top:0; right:0; bottom:0; left:300px; }
-    #panel {
-      position:absolute;
-      top:10px; left:10px;
-      background:white; color:black;
-      padding:15px; border-radius:8px;
-      font-family:'Segoe UI',sans-serif;
-      width:250px;
-      box-shadow:0 2px 8px rgba(0,0,0,0.2);
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #000;
     }
-    #panel h1 { font-size:18px; margin:0 0 8px; }
-    #panel p { margin:4px 0; }
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+    .info-panel {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      color: #111;
+      padding: 16px;
+      border-radius: 12px;
+      font-family: 'Segoe UI', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    .info-panel h2 {
+      margin-top: 0;
+      font-size: 18px;
+      font-weight: bold;
+      color: #000;
+    }
   </style>
 </head>
 <body>
-  <div id="panel">
-    <h1>실시간 위치 추적</h1>
-    <p>⏱️ 시간: <span id="time">-</span></p>
-    <p>📍 정확도: <span id="accuracy">-</span> m</p>
-    <p>🔋 배터리: <span id="battery">-</span>%</p>
-    <hr />
-    <h2>🌧️ 현재 날씨</h2>
-    <p>🌡️ 온도: <span id="temp">-</span>°C</p>
-    <p>☁️ 상태: <span id="desc">-</span></p>
-    <p>💨 바람: <span id="wind">-</span> m/s</p>
-  </div>
   <div id="map"></div>
+  <div class="info-panel">
+    <h2>📌 실시간 위치 추적</h2>
+    ⏰ 시간: <span id="time">-</span><br />
+    🎯 정확도: <span id="accuracy">-</span> m<br />
+    🔋 배터리: <span id="battery">-</span>%<br />
+    <hr />
+    <h2>☁️ 현재 날씨</h2>
+    🌡️ 온도: <span id="temp">-</span>°C<br />
+    🌤️ 상태: <span id="desc">-</span><br />
+    🍃 바람: <span id="wind">-</span> m/s<br />
+  </div>
 
   <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoieW9vbmd5OTEiLCJhIjoiY21jcTVjd2hrMDl6OTJpczNtcThvOTB3byJ9.PXjOq69n2cGQq2U-BwWkfg';
-
+    
     const map = new mapboxgl.Map({
       container: 'map',
       style: 'mapbox://styles/mapbox/light-v10',
@@ -48,7 +62,7 @@
       zoom: 14
     });
 
-    const marker = new mapboxgl.Marker({ color: 'green' })
+    const marker = new mapboxgl.Marker({ color: 'lime' })
       .setLngLat([127.02317, 37.62033])
       .addTo(map);
 
@@ -57,20 +71,20 @@
         const res = await fetch('https://docs.google.com/spreadsheets/d/1zhJpMY2Txv1YMER2dxjRtJIO7s3Y0mxAS2Ec_AvM65Q/gviz/tq?tqx=out:json');
         const text = await res.text();
         const json = JSON.parse(text.substring(47).slice(0, -2));
-        const row = json.table.rows.at(-1).c;
 
+        const row = json.table.rows.at(-1).c;
         const time = row[0]?.f;
         const lat = parseFloat(row[1]?.v);
         const lng = parseFloat(row[2]?.v);
-        const acc = row[3]?.v || '-';
-        const bat = row[4]?.v || '-';
+        const acc = row[3]?.v;
+        const bat = row[4]?.v;
 
         document.getElementById('time').textContent = time;
         document.getElementById('accuracy').textContent = acc;
         document.getElementById('battery').textContent = bat;
 
         marker.setLngLat([lng, lat]);
-        map.flyTo({ center: [lng, lat], speed: 0.5 });
+        map.flyTo({ center: [lng, lat], speed: 0.8 });
 
         fetchWeather(lat, lng);
       } catch (e) {
@@ -80,19 +94,22 @@
 
     async function fetchWeather(lat, lon) {
       try {
-        const apiKey = 'YOUR_OPENWEATHER_KEY';
-        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=kr`);
+        const apiKey = 'a2530b8c9f61aa303ed3dc7ca3d85819'; // YOUR OPENWEATHER KEY
+        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=kr`;
+        const res = await fetch(url);
         const data = await res.json();
-        document.getElementById('temp').textContent = data.main.temp.toFixed(1);
+
+        document.getElementById('temp').textContent = data.main.temp;
         document.getElementById('desc').textContent = data.weather[0].description;
-        document.getElementById('wind').textContent = data.wind.speed.toFixed(1);
+        document.getElementById('wind').textContent = data.wind.speed;
       } catch (err) {
         console.error('날씨 정보 오류:', err);
       }
     }
 
+    // 🔁 15초 주기 갱신
     fetchData();
-    setInterval(fetchData, 10000);
+    setInterval(fetchData, 15000);
   </script>
 </body>
 </html>
