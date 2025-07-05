@@ -33,14 +33,6 @@
     @keyframes blink {
       50% { opacity: 0.2; }
     }
-    .signal-pulse {
-      animation: pulse 1.5s ease-in-out infinite;
-      color: #60a5fa;
-    }
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.2); opacity: 0.6; }
-    }
     .battery-bar {
       display: inline-block;
       width: 32px;
@@ -54,6 +46,24 @@
       background: #4ade80;
       transition: width 0.5s ease;
     }
+    .signal-bars {
+      display: inline-flex;
+      gap: 2px;
+    }
+    .bar {
+      width: 3px;
+      background: #60a5fa;
+      opacity: 0.5;
+      transition: height 0.3s, opacity 0.3s;
+    }
+    .bar.on {
+      opacity: 1;
+    }
+    .bar1 { height: 5px; }
+    .bar2 { height: 8px; }
+    .bar3 { height: 11px; }
+    .bar4 { height: 14px; }
+    .bar5 { height: 17px; }
     @media screen and (max-width: 480px) {
       #info-bar {
         font-size: 0.9rem;
@@ -65,7 +75,16 @@
 <body>
   <div id="info-bar">
     <div class="info-item blinking">🔴 Live</div>
-    <div class="info-item signal-pulse">📶 <span id="gps">-</span> (<span id="gps-text">-</span>)</div>
+    <div class="info-item">
+      <div class="signal-bars">
+        <div class="bar bar1" id="sig1"></div>
+        <div class="bar bar2" id="sig2"></div>
+        <div class="bar bar3" id="sig3"></div>
+        <div class="bar bar4" id="sig4"></div>
+        <div class="bar bar5" id="sig5"></div>
+      </div>
+      <span id="gps">-</span> (<span id="gps-text">-</span>)
+    </div>
     <div class="info-item">🛵 <span id="distance">0.00</span>km</div>
     <div class="info-item">🌡️ <span id="temp">-</span>°C</div>
     <div class="info-item">☁️ <span id="desc">-</span></div>
@@ -95,6 +114,22 @@
       return '나쁨';
     }
 
+    function updateSignalBars(accuracy) {
+      const acc = parseFloat(accuracy);
+      let level = 0;
+      if (!isNaN(acc)) {
+        if (acc <= 10) level = 5;
+        else if (acc <= 20) level = 4;
+        else if (acc <= 30) level = 3;
+        else if (acc <= 50) level = 2;
+        else level = 1;
+      }
+      for (let i = 1; i <= 5; i++) {
+        const bar = document.getElementById('sig' + i);
+        bar.classList.toggle('on', i <= level);
+      }
+    }
+
     function updateBatteryFill(batt) {
       const fill = document.getElementById('battery-fill');
       const level = Math.max(0, Math.min(100, parseFloat(batt)));
@@ -114,6 +149,7 @@
         document.getElementById('gps-text').textContent = getSignalText(data.accuracy);
         document.getElementById('distance').textContent = (data.distance ?? 0).toFixed(2);
 
+        if (data.accuracy) updateSignalBars(data.accuracy);
         if (data.battery) updateBatteryFill(data.battery);
       } catch (e) {
         console.error('하단바 fetch 오류:', e);
