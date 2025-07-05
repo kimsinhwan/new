@@ -26,6 +26,34 @@
       align-items: center;
       gap: 4px;
     }
+    .blinking {
+      animation: blink 1s step-start 0s infinite;
+      color: #f87171;
+    }
+    @keyframes blink {
+      50% { opacity: 0.2; }
+    }
+    .signal-pulse {
+      animation: pulse 1.5s ease-in-out infinite;
+      color: #60a5fa;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.6; }
+    }
+    .battery-bar {
+      display: inline-block;
+      width: 32px;
+      height: 12px;
+      border: 1px solid #ccc;
+      position: relative;
+      background: #222;
+    }
+    .battery-fill {
+      height: 100%;
+      background: #4ade80;
+      transition: width 0.5s ease;
+    }
     @media screen and (max-width: 480px) {
       #info-bar {
         font-size: 0.9rem;
@@ -36,14 +64,14 @@
 </head>
 <body>
   <div id="info-bar">
-    <div class="info-item" style="color:#4ade80;">🟢 Live</div>
-    <div class="info-item">📶 <span id="gps">-</span> (<span id="gps-text">-</span>)</div>
+    <div class="info-item blinking">🔴 Live</div>
+    <div class="info-item signal-pulse">📶 <span id="gps">-</span> (<span id="gps-text">-</span>)</div>
     <div class="info-item">🛵 <span id="distance">0.00</span>km</div>
     <div class="info-item">🌡️ <span id="temp">-</span>°C</div>
     <div class="info-item">☁️ <span id="desc">-</span></div>
     <div class="info-item">🌬️ <span id="wind">-</span> m/s</div>
     <div class="info-item">⏰ <span id="time">-</span></div>
-    <div class="info-item">🔋 <span id="battery">-</span>%</div>
+    <div class="info-item">🔋 <span id="battery">-</span>% <div class="battery-bar"><div id="battery-fill" class="battery-fill" style="width:0%"></div></div></div>
   </div>
 
   <script>
@@ -67,6 +95,13 @@
       return '나쁨';
     }
 
+    function updateBatteryFill(batt) {
+      const fill = document.getElementById('battery-fill');
+      const level = Math.max(0, Math.min(100, parseFloat(batt)));
+      fill.style.width = `${level}%`;
+      fill.style.background = level > 50 ? '#4ade80' : (level > 20 ? '#facc15' : '#f87171');
+    }
+
     async function fetchData() {
       try {
         const res = await fetch('https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec');
@@ -78,6 +113,8 @@
         document.getElementById('gps').textContent = data.accuracy ? `${data.accuracy}m` : '-';
         document.getElementById('gps-text').textContent = getSignalText(data.accuracy);
         document.getElementById('distance').textContent = (data.distance ?? 0).toFixed(2);
+
+        if (data.battery) updateBatteryFill(data.battery);
       } catch (e) {
         console.error('하단바 fetch 오류:', e);
       }
