@@ -13,6 +13,8 @@
       padding: 0;
       height: 100vh;
       overflow: hidden;
+      background: #000;
+      font-family: 'Segoe UI', sans-serif;
     }
     #map {
       position: absolute;
@@ -23,18 +25,21 @@
       position: absolute;
       bottom: 0;
       width: 100%;
-      background: rgba(17, 24, 39, 0.85);
+      background: rgba(0, 0, 0, 0.8);
       color: white;
-      font-size: 1rem;
+      font-size: 1.1rem;
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      padding: 8px;
+      flex-wrap: nowrap;
+      justify-content: space-around;
+      align-items: center;
+      padding: 10px;
       z-index: 10;
     }
     .info-item {
-      margin: 0 12px;
       white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
     }
   </style>
 </head>
@@ -69,8 +74,8 @@
         const res = await fetch('https://docs.google.com/spreadsheets/d/1zhJpMY2Txv1YMER2dxjRtJIO7s3Y0mxAS2Ec_AvM65Q/gviz/tq?tqx=out:json');
         const text = await res.text();
         const json = JSON.parse(text.substring(47).slice(0, -2));
-        const row = json.table.rows.at(-1).c;
 
+        const row = json.table.rows.at(-1).c;
         const time = row[0]?.f;
         const lat = parseFloat(row[1]?.v);
         const lng = parseFloat(row[2]?.v);
@@ -82,7 +87,7 @@
         document.getElementById('battery').textContent = bat;
 
         marker.setLngLat([lng, lat]);
-        map.flyTo({ center: [lng, lat], speed: 1 });
+        map.flyTo({ center: [lng, lat], speed: 0.8 });
 
         fetchWeather(lat, lng);
       } catch (e) {
@@ -106,7 +111,7 @@
     }
 
     fetchData();
-    setInterval(fetchData, 30000);
+    setInterval(fetchData, 5000); // 🔄 5초 주기
   </script>
 </body>
 </html>
