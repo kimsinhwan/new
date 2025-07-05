@@ -1,32 +1,72 @@
-<!-- map.html -->
+<!-- map.html - 마커 커스텀 및 실시간 지도 -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Map Only</title>
+  <title>Live Map</title>
   <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
   <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
-  <style>html, body { margin: 0; height: 100%; } #map { height: 100%; }</style>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: black;
+    }
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+    .custom-marker {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid white;
+      background-size: cover;
+      background-position: center;
+    }
+  </style>
 </head>
 <body>
   <div id="map"></div>
+
   <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoieW9vbmd5OTEiLCJhIjoiY21jcTVjd2hrMDl6OTJpczNtcThvOTB3byJ9.PXjOq69n2cGQq2U-BwWkfg';
+
     const map = new mapboxgl.Map({
       container: 'map',
       style: 'mapbox://styles/mapbox/streets-v11',
       center: [127.02317, 37.62033],
-      zoom: 16
+      zoom: 15,
+      pitch: 0,      // 2D 탑다운
+      bearing: 0
     });
 
-    const marker = new mapboxgl.Marker({ color: 'lime' }).setLngLat([127.02317, 37.62033]).addTo(map);
+    // 커스텀 마커 생성
+    const el = document.createElement('div');
+    el.className = 'custom-marker';
+    el.style.backgroundImage = 'url("https://kimsinhwan.github.io/new/marker.png")';
+
+    const marker = new mapboxgl.Marker(el)
+      .setLngLat([127.02317, 37.62033])
+      .addTo(map);
 
     async function fetchData() {
-      const res = await fetch('https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec');
-      const data = await res.json();
-      marker.setLngLat([data.lng, data.lat]);
-      map.flyTo({ center: [data.lng, data.lat], speed: 0.8 });
+      try {
+        const res = await fetch('https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec');
+        const data = await res.json();
+        const { lat, lng } = data;
+
+        marker.setLngLat([lng, lat]);
+        map.flyTo({
+          center: [lng, lat],
+          speed: 0.8,
+          essential: true
+        });
+      } catch (e) {
+        console.error('지도 업데이트 실패:', e);
+      }
     }
 
     fetchData();
