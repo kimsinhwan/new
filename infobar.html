@@ -75,9 +75,10 @@
 </head>
 <body>
   <div id="info-bar">
+    <!-- 1. 라이브 빨간 점 깜빡이는 상태 유지 -->
     <div class="info-item blinking">🔴 Live</div>
 
-    <!-- 여기서 📶 아이콘 제거 -->
+    <!-- 2. '📶' 아이콘 완전 제거, 텍스트만 남김 -->
     <div class="info-item"><span id="network-status">-</span></div>
 
     <div class="info-item">
@@ -99,6 +100,7 @@
   </div>
 
   <script>
+    // 1. 시간 업데이트 함수
     function updateTime() {
       const now = new Date();
       const h = now.getHours();
@@ -110,6 +112,7 @@
     setInterval(updateTime, 1000);
     updateTime();
 
+    // 2. 신호 강도 텍스트 변환
     function getSignalText(accuracy) {
       const acc = parseFloat(accuracy);
       if (isNaN(acc)) return '-';
@@ -119,6 +122,7 @@
       return '나쁨';
     }
 
+    // 3. 신호 강도 바 업데이트
     function updateSignalBars(accuracy) {
       const acc = parseFloat(accuracy);
       let level = 0;
@@ -134,6 +138,7 @@
       }
     }
 
+    // 4. 배터리 표시 업데이트
     function updateBatteryFill(batt) {
       const fill = document.getElementById('battery-fill');
       const level = Math.max(0, Math.min(100, parseFloat(batt)));
@@ -141,6 +146,7 @@
       fill.style.background = level > 50 ? '#4ade80' : (level > 20 ? '#facc15' : '#f87171');
     }
 
+    // 5. API 데이터 주기적 호출 및 화면 업데이트
     async function fetchData() {
       try {
         const res = await fetch('https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec');
@@ -159,14 +165,14 @@
         if (data.accuracy) updateSignalBars(data.accuracy);
         if (data.battery) updateBatteryFill(data.battery);
 
+        // 6. 네트워크 상태 텍스트 및 색상
         const netElem = document.getElementById('network-status');
         const netValRaw = (data.network || '-').toString().toUpperCase().trim();
 
-        // 5G가 안 뜨는 문제 방지용
-        let netVal = netValRaw;
-        if (netVal.includes('5G')) netVal = '5G';
-        else if (netVal.includes('4G')) netVal = '4G';
-        else netVal = '-';
+        // 5G 포함 여부 체크 후 정확하게 표기
+        let netVal = '-';
+        if (netValRaw.includes('5G')) netVal = '5G';
+        else if (netValRaw.includes('4G')) netVal = '4G';
 
         netElem.textContent = netVal;
 
@@ -174,6 +180,7 @@
         else if (netVal === '5G') netElem.style.color = '#f87171'; // 빨강
         else netElem.style.color = '#ffffff';
 
+        // 7. 날씨 API 호출
         if (data.lat && data.lng) {
           const apiKey = '3e89d241fea1e454d2cf352ce9cde4fe';
           const url = `https://api.openweathermap.org/data/2.5/weather?lat=${data.lat}&lon=${data.lng}&appid=${apiKey}&units=metric&lang=kr`;
