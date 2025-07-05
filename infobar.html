@@ -65,12 +65,17 @@
     .bar3 { height: 13px; }
     .bar4 { height: 17px; }
     .bar5 { height: 21px; }
+
+    /* 유플러스 텍스트 스타일 */
     #uplogo {
-      width: 24px;
-      height: 24px;
-      display: inline-block;
-      background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Logo_of_LG_Uplus.svg/120px-Logo_of_LG_Uplus.svg.png') no-repeat center/contain;
+      font-weight: 700;
+      font-size: 1.4rem;
+      color: #6B2C91; /* 유플러스 시그니처 보라색 */
+      font-family: 'Arial Black', Arial, sans-serif;
+      user-select: none;
+      cursor: default;
     }
+
     @media screen and (max-width: 480px) {
       #info-bar {
         font-size: 0.9rem;
@@ -81,8 +86,8 @@
 </head>
 <body>
   <div id="info-bar">
-    <!-- 1. 유플러스 로고 -->
-    <div class="info-item" id="uplogo" title="LG U+"></div>
+    <!-- 1. 유플러스 텍스트 로고 -->
+    <div class="info-item" id="uplogo" title="LG U+">U+</div>
 
     <!-- 2. 시간 -->
     <div class="info-item"><span id="time">-</span></div>
