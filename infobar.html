@@ -27,7 +27,6 @@
 
     .blinking {
       animation: blink 1s step-start 0s infinite;
-      color: #f87171;
     }
 
     @keyframes blink {
@@ -45,7 +44,6 @@
 
     .battery-fill {
       height: 100%;
-      background: #4ade80;
       transition: width 0.5s ease;
     }
 
@@ -129,7 +127,9 @@
     </div>
     <div class="info-item">
       <span id="battery">-</span>%
-      <div class="battery-bar"><div id="battery-fill" class="battery-fill"></div></div>
+      <div class="battery-bar">
+        <div id="battery-fill" class="battery-fill"></div>
+      </div>
     </div>
     <div class="info-item blinking">🔴 Live</div>
   </div>
@@ -183,15 +183,26 @@
         const res = await fetch('https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec');
         const data = await res.json();
 
-        document.getElementById('battery').textContent = data.battery ?? '-';
+        const battery = parseInt(data.battery || 0);
+        document.getElementById('battery').textContent = battery;
+        const battFill = document.getElementById('battery-fill');
+        battFill.style.width = `${Math.min(battery, 100)}%`;
+
+        // 배터리 색상 및 깜빡임 처리
+        battFill.classList.remove('blinking');
+        if (battery <= 20) {
+          battFill.style.background = '#f87171'; // 빨간색
+          battFill.classList.add('blinking');    // 깜빡임
+        } else if (battery <= 49) {
+          battFill.style.background = '#facc15'; // 노란색
+        } else {
+          battFill.style.background = '#4ade80'; // 초록색
+        }
+
         document.getElementById('temp').textContent = data.temp ?? '-';
         document.getElementById('desc').textContent = data.desc ?? '-';
         document.getElementById('wind').textContent = data.wind ?? '-';
         document.getElementById('distance').textContent = parseFloat(data.total_km || 0).toFixed(2);
-
-        const battFill = document.getElementById('battery-fill');
-        const battPercent = parseInt(data.battery || 0);
-        battFill.style.width = `${Math.min(battPercent, 100)}%`;
 
         updateGpsAntennaBars(data.accuracy);
         updateSignalBars(data.network_strength);
