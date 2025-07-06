@@ -5,11 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Live Info Bar</title>
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background: transparent;
-    }
+    body { margin: 0; padding: 0; background: transparent; }
+
     #info-bar {
       display: flex;
       justify-content: flex-start;
@@ -21,18 +18,22 @@
       padding: 8px 24px;
       white-space: nowrap;
     }
+
     .info-item {
       display: inline-flex;
       align-items: center;
       gap: 4px;
     }
+
     .blinking {
       animation: blink 1s step-start 0s infinite;
       color: #f87171;
     }
+
     @keyframes blink {
       50% { opacity: 0.2; }
     }
+
     .battery-bar {
       display: inline-block;
       width: 32px;
@@ -41,35 +42,51 @@
       background: #222;
       position: relative;
     }
+
     .battery-fill {
       height: 100%;
       background: #4ade80;
       transition: width 0.5s ease;
     }
-    .signal-bars {
+
+    .gps-antenna {
+      display: inline-flex;
+      align-items: flex-end;
+      gap: 2px;
+      margin-right: 4px;
+    }
+
+    .antenna-bar {
+      width: 3px;
+      background: #444;
+      transition: height 0.3s, background 0.3s;
+    }
+
+    .antenna1 { height: 6px; }
+    .antenna2 { height: 10px; }
+    .antenna3 { height: 14px; }
+    .antenna-on { background: #4ade80; }
+    .antenna-blink { background: #f87171 !important; animation: blink 1s step-start 0s infinite; }
+
+    .gps-bars, .network-bars {
       display: inline-flex;
       align-items: flex-end;
       gap: 3px;
     }
+
     .bar {
       width: 3px;
       background: #60a5fa;
       opacity: 0.4;
       transition: height 0.3s, opacity 0.3s, background 0.3s;
     }
-    .bar.on {
-      opacity: 1;
-    }
+
+    .bar.on { opacity: 1; }
     .bar1 { height: 5px; }
     .bar2 { height: 9px; }
     .bar3 { height: 13px; }
     .bar4 { height: 17px; }
     .bar5 { height: 21px; }
-
-    .bad-gps {
-      background: #f87171 !important;
-      animation: blink 1s step-start 0s infinite;
-    }
 
     #uplogo {
       font-weight: 700;
@@ -81,29 +98,33 @@
     }
 
     @media screen and (max-width: 480px) {
-      #info-bar {
-        font-size: 0.9rem;
-        flex-wrap: wrap;
-      }
+      #info-bar { font-size: 0.9rem; flex-wrap: wrap; }
     }
   </style>
 </head>
 <body>
   <div id="info-bar">
-    <div class="info-item" id="uplogo" title="LG U+">U+</div>
+    <div class="info-item" id="uplogo">U+</div>
+    <div class="info-item">
+      <div class="gps-antenna">
+        <div class="antenna-bar antenna1" id="antenna1"></div>
+        <div class="antenna-bar antenna2" id="antenna2"></div>
+        <div class="antenna-bar antenna3" id="antenna3"></div>
+      </div>
+      <span id="network-status">4G</span>
+    </div>
     <div class="info-item"><span id="time">-</span></div>
     <div class="info-item">🛵 <span id="distance">0.00</span>km</div>
     <div class="info-item">🌡️ <span id="temp">-</span>°C</div>
     <div class="info-item">☁️ <span id="desc">-</span></div>
     <div class="info-item">🌬️ <span id="wind">-</span> m/s</div>
-    <div class="info-item"><span id="network-status">-</span></div>
     <div class="info-item">
-      <div class="signal-bars">
-        <div class="bar bar1" id="sig1"></div>
-        <div class="bar bar2" id="sig2"></div>
-        <div class="bar bar3" id="sig3"></div>
-        <div class="bar bar4" id="sig4"></div>
-        <div class="bar bar5" id="sig5"></div>
+      <div class="gps-bars">
+        <div class="bar bar1" id="net1"></div>
+        <div class="bar bar2" id="net2"></div>
+        <div class="bar bar3" id="net3"></div>
+        <div class="bar bar4" id="net4"></div>
+        <div class="bar bar5" id="net5"></div>
       </div>
     </div>
     <div class="info-item">
@@ -125,31 +146,21 @@
     setInterval(updateTime, 1000);
     updateTime();
 
-    function updateSignalBars(accuracy) {
+    function updateGpsAntennaBars(accuracy) {
       const acc = parseFloat(accuracy);
-      let level = 0;
-      if (!isNaN(acc)) {
-        if (acc <= 10) level = 5;
-        else if (acc <= 20) level = 4;
-        else if (acc <= 30) level = 3;
-        else if (acc <= 50) level = 2;
-        else level = 1;
-      }
-      for (let i = 1; i <= 5; i++) {
-        const el = document.getElementById('sig' + i);
-        el.classList.toggle('on', i <= level);
-        el.classList.remove('bad-gps');
-        if (level <= 2 && i <= level) {
-          el.classList.add('bad-gps');
+      let level = 1;
+      if (acc <= 10) level = 3;
+      else if (acc <= 30) level = 2;
+      else level = 1;
+
+      for (let i = 1; i <= 3; i++) {
+        const el = document.getElementById('antenna' + i);
+        el.classList.remove('antenna-on', 'antenna-blink');
+        if (level >= i) {
+          if (level === 1 && i === 1) el.classList.add('antenna-blink');
+          else el.classList.add('antenna-on');
         }
       }
-    }
-
-    function updateBatteryFill(batt) {
-      const fill = document.getElementById('battery-fill');
-      const level = Math.max(0, Math.min(100, parseFloat(batt)));
-      fill.style.width = `${level}%`;
-      fill.style.background = level > 50 ? '#4ade80' : (level > 20 ? '#facc15' : '#f87171');
     }
 
     async function fetchData() {
@@ -158,30 +169,14 @@
         const data = await res.json();
 
         document.getElementById('battery').textContent = data.battery ?? '-';
-        updateBatteryFill(data.battery);
-
-        const distElem = document.getElementById('distance');
-        const totalKm = parseFloat(data.total_km ?? 0);
-        distElem.textContent = totalKm.toFixed(2);
-
-        if (totalKm < 30) distElem.style.color = '#facc15';
-        else if (totalKm < 70) distElem.style.color = '#4ade80';
-        else distElem.style.color = '#f87171';
-
         document.getElementById('temp').textContent = data.temp ?? '-';
         document.getElementById('desc').textContent = data.desc ?? '-';
         document.getElementById('wind').textContent = data.wind ?? '-';
+        document.getElementById('distance').textContent = parseFloat(data.total_km || 0).toFixed(2);
 
-        const netElem = document.getElementById('network-status');
-        const netVal = (data.network || '-').toUpperCase().trim();
-        netElem.textContent = netVal;
-        if (netVal === '4G') netElem.style.color = '#4ade80';
-        else if (netVal === '5G') netElem.style.color = '#f87171';
-        else netElem.style.color = '#ffffff';
-
-        updateSignalBars(data.accuracy);
+        updateGpsAntennaBars(data.accuracy);
       } catch (e) {
-        console.error('하단바 fetch 오류:', e);
+        console.error('fetch error:', e);
       }
     }
 
