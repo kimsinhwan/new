@@ -1,128 +1,183 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>Live Overlay</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Info Bar</title>
   <style>
-    body {
-      margin: 0;
-      background: rgba(0, 0, 0, 0.4);
-      font-family: Arial, sans-serif;
-      font-size: 18px;
+    body { margin: 0; padding: 0; background: transparent; }
+    #info-bar {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 16px;
+      background: rgba(0, 0, 0, 0.85);
       color: white;
+      font-size: 1rem;
+      padding: 8px 24px;
+      white-space: nowrap;
     }
-    #bar {
-      display: flex;
+    .info-item {
+      display: inline-flex;
       align-items: center;
-      padding: 8px 16px;
-      gap: 14px;
+      gap: 4px;
     }
-    .icon {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .bar {
-      width: 40px;
-      height: 12px;
-      border-radius: 4px;
-      background: gray;
-      overflow: hidden;
-      position: relative;
-    }
-    .bar-fill {
-      height: 100%;
-      transition: width 0.5s, background 0.5s;
-    }
-    .blink {
-      animation: blink 1s infinite;
+    .blinking {
+      animation: blink 1s step-start 0s infinite;
     }
     @keyframes blink {
-      0%, 50%, 100% { opacity: 1; }
-      25%, 75% { opacity: 0; }
+      50% { opacity: 0.2; }
+    }
+    .battery-bar {
+      display: inline-block;
+      width: 32px;
+      height: 12px;
+      border: 1px solid #ccc;
+      background: #222;
+      position: relative;
+    }
+    .battery-fill {
+      height: 100%;
+      transition: width 0.5s ease;
+    }
+    .gps-bars, .network-bars {
+      display: inline-flex;
+      align-items: flex-end;
+      gap: 3px;
+    }
+    .bar {
+      width: 3px;
+      background: #60a5fa;
+      opacity: 0.4;
+      transition: height 0.3s, opacity 0.3s, background 0.3s;
+    }
+    .bar.on { opacity: 1; }
+    .bar1 { height: 5px; }
+    .bar2 { height: 9px; }
+    .bar3 { height: 13px; }
+    .bar4 { height: 17px; }
+    .bar5 { height: 21px; }
+    #uplogo {
+      font-weight: 700;
+      font-size: 1.4rem;
+      color: #ec0b8d;
+      font-family: 'Arial Black', Arial, sans-serif;
+      user-select: none;
+    }
+    #gps-label {
+      font-weight: bold;
+    }
+    @media screen and (max-width: 480px) {
+      #info-bar { font-size: 0.9rem; flex-wrap: wrap; }
     }
   </style>
 </head>
 <body>
-  <div id="bar">
-    <div class="icon">📶 유플러스</div>
-    <div class="icon" id="time">🕒 --:--</div>
-    <div class="icon" id="distance">📍 0.0km</div>
-    <div class="icon" id="temp">🌡️ --°</div>
-    <div class="icon" id="weather">☁️ 날씨</div>
-    <div class="icon" id="wind">💨 바람</div>
-    <div class="icon" id="gps">GPS</div>
-    <div class="icon" id="network">4G</div>
-    <div class="icon">
-      <div class="bar"><div id="signalBar" class="bar-fill"></div></div>
+  <div id="info-bar">
+    <div class="info-item" id="uplogo">U+</div>
+    <div class="info-item"><span id="time">-</span></div>
+    <div class="info-item">🛵 <span id="distance">0.00</span>km</div>
+    <div class="info-item">🌡️ <span id="temp">-</span>°C</div>
+    <div class="info-item">☁️ <span id="desc">-</span></div>
+    <div class="info-item">🌬️ <span id="wind">-</span> m/s</div>
+    <div class="info-item" id="gps-label">GPS</div>
+    <div class="info-item"><span id="network-status">4G</span></div>
+    <div class="info-item">
+      <div class="network-bars">
+        <div class="bar bar1" id="net1"></div>
+        <div class="bar bar2" id="net2"></div>
+        <div class="bar bar3" id="net3"></div>
+        <div class="bar bar4" id="net4"></div>
+        <div class="bar bar5" id="net5"></div>
+      </div>
     </div>
-    <div class="icon">
-      <div class="bar"><div id="batteryBar" class="bar-fill"></div></div>
+    <div class="info-item">
+      <span id="battery">-</span>%
+      <div class="battery-bar">
+        <div id="battery-fill" class="battery-fill"></div>
+      </div>
     </div>
-    <div class="icon" id="live" class="blink">🔴 LIVE</div>
+    <div class="info-item blinking">🔴 Live</div>
   </div>
 
   <script>
-    function fetchData() {
-      fetch("https://script.google.com/macros/s/AKfycbytd8Vn2WH59p3y49R5pkAfH7R3NH-LIMZ8HYQuUMtRCfepqJqLyRYzDud2uqVznNcA/exec")
-        .then(res => res.json())
-        .then(data => {
-          const acc = parseFloat(data.accuracy);
-          const batt = parseInt(data.battery);
-          const totalKm = parseFloat(data.total_km || 0);
-          const signal = parseInt(data.network_strength || 3);
-
-          // 시간
-          const now = new Date();
-          const time = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
-          document.getElementById('time').innerText = `🕒 ${time}`;
-
-          // 누적 거리
-          document.getElementById('distance').innerText = `📍 ${totalKm.toFixed(1)}km`;
-
-          // GPS 감도 텍스트 상태
-          const gps = document.getElementById('gps');
-          gps.classList.remove("blink");
-          gps.style.color = "white";
-          if (acc <= 20) {
-            gps.style.color = "green";
-          } else if (acc <= 50) {
-            gps.style.color = "green";
-            gps.classList.add("blink");
-          } else {
-            gps.style.color = "red";
-            gps.classList.add("blink");
-          }
-
-          // 배터리 바
-          const batteryBar = document.getElementById('batteryBar');
-          batteryBar.classList.remove("blink");
-          batteryBar.style.width = `${batt}%`;
-          if (batt <= 30) {
-            batteryBar.style.background = "red";
-            batteryBar.classList.add("blink");
-          } else if (batt <= 50) {
-            batteryBar.style.background = "yellow";
-          } else {
-            batteryBar.style.background = "lime";
-          }
-
-          // 네트워크 신호 바
-          const signalBar = document.getElementById('signalBar');
-          signalBar.classList.remove("blink");
-          const barWidth = (signal / 5) * 100;
-          signalBar.style.width = `${barWidth}%`;
-          if (signal <= 2) {
-            signalBar.style.background = "red";
-            signalBar.classList.add("blink");
-          } else {
-            signalBar.style.background = "lime";
-          }
-        });
+    function updateTime() {
+      const now = new Date();
+      const h = now.getHours();
+      const m = now.getMinutes().toString().padStart(2, '0');
+      const ap = h >= 12 ? '오후' : '오전';
+      const hh = (h % 12 || 12).toString();
+      document.getElementById('time').textContent = `${ap} ${hh}:${m}`;
     }
 
+    function updateSignalBars(strength) {
+      const level = parseInt(strength || 0);
+      for (let i = 1; i <= 5; i++) {
+        const bar = document.getElementById('net' + i);
+        if (i <= level) {
+          bar.classList.add('on');
+          bar.style.background = i <= 2 ? '#f87171' : '#4ade80'; // 1~2 빨강, 3~5 초록
+          bar.classList.toggle('blinking', i <= 2);
+        } else {
+          bar.classList.remove('on', 'blinking');
+          bar.style.background = '#60a5fa';
+        }
+      }
+    }
+
+    function updateGpsLabel(accuracy) {
+      const acc = parseFloat(accuracy);
+      const gpsLabel = document.getElementById('gps-label');
+      gpsLabel.classList.remove('blinking');
+      if (acc <= 20) {
+        gpsLabel.style.color = '#4ade80'; // 초록 고정
+      } else if (acc <= 50) {
+        gpsLabel.style.color = '#4ade80'; // 초록 깜빡임
+        gpsLabel.classList.add('blinking');
+      } else {
+        gpsLabel.style.color = '#f87171'; // 빨강 깜빡임
+        gpsLabel.classList.add('blinking');
+      }
+    }
+
+    async function fetchData() {
+      try {
+        const res = await fetch("https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec");
+        const data = await res.json();
+
+        // 배터리 바 처리
+        const battery = parseInt(data.battery || 0);
+        const battFill = document.getElementById('battery-fill');
+        document.getElementById('battery').textContent = battery;
+        battFill.style.width = `${Math.min(battery, 100)}%`;
+        battFill.classList.remove('blinking');
+
+        if (battery <= 30) {
+          battFill.style.background = '#f87171';
+          battFill.classList.add('blinking');
+        } else if (battery <= 50) {
+          battFill.style.background = '#facc15';
+        } else {
+          battFill.style.background = '#4ade80';
+        }
+
+        document.getElementById('temp').textContent = data.temp ?? '-';
+        document.getElementById('desc').textContent = data.desc ?? '-';
+        document.getElementById('wind').textContent = data.wind ?? '-';
+        document.getElementById('distance').textContent = parseFloat(data.total_km || 0).toFixed(2);
+        document.getElementById('network-status').textContent = data.network || '4G';
+
+        updateSignalBars(data.network_strength);
+        updateGpsLabel(data.accuracy);
+      } catch (e) {
+        console.error('fetch error:', e);
+      }
+    }
+
+    updateTime();
+    setInterval(updateTime, 1000);
     fetchData();
-    setInterval(fetchData, 30000); // 30초마다 자동 갱신
+    setInterval(fetchData, 5000);
   </script>
 </body>
 </html>
