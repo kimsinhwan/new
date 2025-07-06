@@ -27,7 +27,8 @@
 
     async function fetchLocation() {
       try {
-        const res = await fetch('https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec');
+        // URL 변경된 부분
+        const res = await fetch('https://script.google.com/macros/s/AKfycbx5IkzqLRY-3VzZ7pJfXbPqYRTh5Ad5i83St4JL98zusdGU61ANiiGlulw93c0l0AgPvw/exec');
         const data = await res.json();
         if (data.lat && data.lng) {
           marker.setLatLng([data.lat, data.lng]);
