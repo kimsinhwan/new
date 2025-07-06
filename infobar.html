@@ -142,6 +142,7 @@
 
     async function fetchData() {
       try {
+        // <== 여기에만 새 URL 적용하세요! ==
         const res = await fetch("https://script.google.com/macros/s/AKfycbxTLvLP69RaNDT17z2Jcgan_qwxWcOBHNvackXvqdqrvGeHOZ4TZXO1o7v0ZDBDPI6I8Q/exec");
         const data = await res.json();
 
@@ -161,9 +162,12 @@
           battFill.style.background = '#4ade80';
         }
 
+        // 날씨 정보 표시
         document.getElementById('temp').textContent = data.temp ?? '-';
         document.getElementById('desc').textContent = data.desc ?? '-';
         document.getElementById('wind').textContent = data.wind ?? '-';
+
+        // 거리, 네트워크 표시
         document.getElementById('distance').textContent = parseFloat(data.total_km || 0).toFixed(2);
         document.getElementById('network-status').textContent = data.network || '4G';
 
