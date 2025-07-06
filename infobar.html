@@ -143,22 +143,37 @@
       const hh = (h % 12 || 12).toString();
       document.getElementById('time').textContent = `${ap} ${hh}:${m}`;
     }
-    setInterval(updateTime, 1000);
-    updateTime();
 
     function updateGpsAntennaBars(accuracy) {
       const acc = parseFloat(accuracy);
-      let level = 1;
-      if (acc <= 10) level = 3;
-      else if (acc <= 30) level = 2;
-      else level = 1;
-
       for (let i = 1; i <= 3; i++) {
         const el = document.getElementById('antenna' + i);
         el.classList.remove('antenna-on', 'antenna-blink');
-        if (level >= i) {
-          if (level === 1 && i === 1) el.classList.add('antenna-blink');
-          else el.classList.add('antenna-on');
+      }
+
+      if (acc <= 10) {
+        for (let i = 1; i <= 3; i++) {
+          document.getElementById('antenna' + i).classList.add('antenna-on');
+        }
+      } else if (acc <= 19) {
+        for (let i = 1; i <= 2; i++) {
+          document.getElementById('antenna' + i).classList.add('antenna-on', 'antenna-blink');
+        }
+      } else {
+        document.getElementById('antenna1').classList.add('antenna-blink');
+      }
+    }
+
+    function updateSignalBars(strength) {
+      const level = parseInt(strength || 0);
+      for (let i = 1; i <= 5; i++) {
+        const bar = document.getElementById('net' + i);
+        if (i <= level) {
+          bar.classList.add('on');
+          bar.style.background = i <= 2 ? '#f87171' : '#4ade80';
+        } else {
+          bar.classList.remove('on');
+          bar.style.background = '#60a5fa';
         }
       }
     }
@@ -174,14 +189,21 @@
         document.getElementById('wind').textContent = data.wind ?? '-';
         document.getElementById('distance').textContent = parseFloat(data.total_km || 0).toFixed(2);
 
+        const battFill = document.getElementById('battery-fill');
+        const battPercent = parseInt(data.battery || 0);
+        battFill.style.width = `${Math.min(battPercent, 100)}%`;
+
         updateGpsAntennaBars(data.accuracy);
+        updateSignalBars(data.network_strength);
       } catch (e) {
         console.error('fetch error:', e);
       }
     }
 
-    setInterval(fetchData, 5000);
+    updateTime();
+    setInterval(updateTime, 1000);
     fetchData();
+    setInterval(fetchData, 5000);
   </script>
 </body>
 </html>
