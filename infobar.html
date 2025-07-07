@@ -116,19 +116,20 @@
       for (let i = 1; i <= 5; i++) {
         const bar = document.getElementById('net' + i);
         bar.classList.remove('on', 'blinking');
-        bar.style.background = '#60a5fa';
+        bar.style.background = '#ccc'; // 기본 회색으로 초기화
       }
 
-      if (level >= 1) {
-        for (let i = 1; i <= level; i++) {
-          const bar = document.getElementById('net' + i);
+      for (let i = 1; i <= 5; i++) {
+        const bar = document.getElementById('net' + i);
+
+        if (i <= level) {
           bar.classList.add('on');
 
-          if (level <= 1) {
-            bar.style.background = '#f87171';
+          if (level === 1) {
+            bar.style.background = '#f87171'; // 빨강 + 깜박임
             bar.classList.add('blinking');
           } else if (level === 2) {
-            bar.style.background = '#f87171'; // 빨간 고정
+            bar.style.background = '#f87171'; // 빨강 고정
           } else {
             bar.style.background = '#4ade80'; // 초록 고정
           }
