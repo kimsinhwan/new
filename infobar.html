@@ -112,15 +112,26 @@
 
     function updateSignalBars(strength) {
       const level = parseInt(strength || 0);
+
       for (let i = 1; i <= 5; i++) {
         const bar = document.getElementById('net' + i);
-        if (i <= level) {
+        bar.classList.remove('on', 'blinking');
+        bar.style.background = '#60a5fa';
+      }
+
+      if (level >= 1) {
+        for (let i = 1; i <= level; i++) {
+          const bar = document.getElementById('net' + i);
           bar.classList.add('on');
-          bar.style.background = i <= 2 ? '#f87171' : '#4ade80'; // 1~2 빨강, 3~5 초록
-          bar.classList.toggle('blinking', i <= 2);
-        } else {
-          bar.classList.remove('on', 'blinking');
-          bar.style.background = '#60a5fa';
+
+          if (level <= 1) {
+            bar.style.background = '#f87171';
+            bar.classList.add('blinking');
+          } else if (level === 2) {
+            bar.style.background = '#f87171'; // 빨간 고정
+          } else {
+            bar.style.background = '#4ade80'; // 초록 고정
+          }
         }
       }
     }
@@ -130,19 +141,18 @@
       const gpsLabel = document.getElementById('gps-label');
       gpsLabel.classList.remove('blinking');
       if (acc <= 20) {
-        gpsLabel.style.color = '#4ade80'; // 초록 고정
+        gpsLabel.style.color = '#4ade80';
       } else if (acc <= 50) {
-        gpsLabel.style.color = '#4ade80'; // 초록 깜빡임
+        gpsLabel.style.color = '#4ade80';
         gpsLabel.classList.add('blinking');
       } else {
-        gpsLabel.style.color = '#f87171'; // 빨강 깜빡임
+        gpsLabel.style.color = '#f87171';
         gpsLabel.classList.add('blinking');
       }
     }
 
     async function fetchData() {
       try {
-        // URL 변경된 부분
         const res = await fetch("https://script.google.com/macros/s/AKfycbx5IkzqLRY-3VzZ7pJfXbPqYRTh5Ad5i83St4JL98zusdGU61ANiiGlulw93c0l0AgPvw/exec");
         const data = await res.json();
 
@@ -164,7 +174,6 @@
         document.getElementById('temp').textContent = data.temp ?? '-';
         document.getElementById('desc').textContent = data.desc ?? '-';
         document.getElementById('wind').textContent = data.wind ?? '-';
-
         document.getElementById('distance').textContent = parseFloat(data.total_km || 0).toFixed(2);
         document.getElementById('network-status').textContent = data.network || '4G';
 
