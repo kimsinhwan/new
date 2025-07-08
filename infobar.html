@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Live Info Bar</title>
   <style>
-    /* ▶(기존 스타일 그대로) */
     body{margin:0;padding:0;background:transparent;}
     #info-bar{display:flex;justify-content:flex-start;align-items:center;gap:16px;
       background:rgba(0,0,0,.85);color:#fff;font-size:1rem;padding:8px 24px;white-space:nowrap;}
@@ -50,45 +49,64 @@
   </div>
 
   <script>
-    /* 시계 */
+    /* ───────── 시계 ───────── */
     function updateTime(){
       const n=new Date(),h=n.getHours(),m=n.getMinutes().toString().padStart(2,'0');
       const ap=(h>=12?'오후':'오전'),hh=(h%12||12).toString();
       document.getElementById('time').textContent=`${ap} ${hh}:${m}`;
     }
 
-    /* 신호강도·GPS 표시 함수(기존 유지) ... 그대로 ... */
+    /* ───────── 신호·GPS ───────── */
+    function updateSignalBars(lvl){
+      lvl=parseInt(lvl||0);
+      for(let i=1;i<=5;i++){
+        const b=document.getElementById('net'+i);
+        b.className='bar bar'+i; b.style.background='#ccc';
+      }
+      for(let i=1;i<=lvl;i++){
+        const b=document.getElementById('net'+i); b.classList.add('on');
+        if(lvl===1){b.style.background='#f87171';b.classList.add('blinking');}
+        else if(lvl===2){b.style.background='#f87171';}
+        else{b.style.background='#4ade80';}
+      }
+    }
+    function updateGpsLabel(acc){
+      const a=parseFloat(acc),lbl=document.getElementById('gps-label');
+      lbl.classList.remove('blinking');
+      if(a<=20){lbl.style.color='#4ade80';}
+      else if(a<=50){lbl.style.color='#4ade80';lbl.classList.add('blinking');}
+      else{lbl.style.color='#f87171';lbl.classList.add('blinking');}
+    }
 
-    /* ✅ GAS URL (googleusercontent 직통) */
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxpKvbE7y7NQXplZR3LuGjQBcvX44ywsKKADsmQOUnNN3ICC0UABbaVmCtlWzlgu-vM5A/exec';
+    /* ───────── GAS URL (/exec) ───────── */
+    const GAS_URL='https://script.google.com/macros/s/AKfycbxpKvbE7y7NQXplZR3LuGjQBcvX44ywsKKADsmQOUnNN3ICC0UABbaVmCtlWzlgu-vM5A/exec';
 
     async function fetchData(){
       try{
         const res = await fetch(GAS_URL + '&t=' + Date.now(), { cache:'no-store' });
         const d   = await res.json();
 
-        /* 기존 데이터 바인딩 로직 그대로 (배터리/온도/거리 등) */
-        const batt = parseInt(d.battery||0);
-        document.getElementById('battery').textContent = batt;
-        const fill = document.getElementById('battery-fill');
-        fill.style.width = `${Math.min(batt,100)}%`;
-        fill.classList.remove('blinking');
-        /* ... 이하 기존 로직 그대로 ... */
-        document.getElementById('temp').textContent  = d.temp  ?? '-';
-        document.getElementById('desc').textContent  = d.desc  ?? '-';
-        document.getElementById('wind').textContent  = d.wind  ?? '-';
-        document.getElementById('distance').textContent =
-          parseFloat(d.total_km||0).toFixed(2);
+        const batt=parseInt(d.battery||0);
+        document.getElementById('battery').textContent=batt;
+        const fill=document.getElementById('battery-fill');
+        fill.style.width=`${Math.min(batt,100)}%`; fill.classList.remove('blinking');
+        if(batt<=30){fill.style.background='#f87171';fill.classList.add('blinking');}
+        else if(batt<=50){fill.style.background='#facc15';}
+        else{fill.style.background='#4ade80';}
+
+        document.getElementById('temp').textContent     = d.temp  ?? '-';
+        document.getElementById('desc').textContent     = d.desc  ?? '-';
+        document.getElementById('wind').textContent     = d.wind  ?? '-';
+        document.getElementById('distance').textContent = (+d.total_km||0).toFixed(2);
         document.getElementById('network-status').textContent = d.network||'4G';
+
         updateSignalBars(d.network_strength);
         updateGpsLabel(d.accuracy);
-      }catch(e){ console.error('fetch error:',e); }
+      }catch(e){console.error('fetch error:',e);}
     }
 
-    updateTime();               /* 시계 1초 주기 */
-    setInterval(updateTime,1000);
-    fetchData();                /* 데이터 3초 주기 */
-    setInterval(fetchData,3000);
+    updateTime(); setInterval(updateTime,1000);
+    fetchData();  setInterval(fetchData,3000);
   </script>
 </body>
 </html>
