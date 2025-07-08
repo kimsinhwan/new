@@ -49,14 +49,14 @@
   </div>
 
   <script>
-    /* ───────── 시계 ───────── */
+    /* ── 시계 ── */
     function updateTime(){
       const n=new Date(),h=n.getHours(),m=n.getMinutes().toString().padStart(2,'0');
       const ap=(h>=12?'오후':'오전'),hh=(h%12||12).toString();
       document.getElementById('time').textContent=`${ap} ${hh}:${m}`;
     }
 
-    /* ───────── 신호·GPS ───────── */
+    /* ── 신호·GPS ── */
     function updateSignalBars(lvl){
       lvl=parseInt(lvl||0);
       for(let i=1;i<=5;i++){
@@ -78,8 +78,8 @@
       else{lbl.style.color='#f87171';lbl.classList.add('blinking');}
     }
 
-    /* ───────── GAS URL (/exec) ───────── */
-    const GAS_URL='https://script.google.com/macros/s/AKfycbxpKvbE7y7NQXplZR3LuGjQBcvX44ywsKKADsmQOUnNN3ICC0UABbaVmCtlWzlgu-vM5A/exec';
+    /* ── GAS 직통 URL ── */
+    const GAS_URL='https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLin4SU4LV1fYcDCJ1H0ywD5Kqhgjrxgjh_acvP_NvPBQe71EDEpD5wAFZCzAxWkxqBcc1kfe3ugzoOoj46RnS78G8W1d-EQZNZqLHt6QWKioKDFRBwG4VVnll87wACygEcfnA-jTUKKCKLrK7-6GYmTONpODBo5Fb_XVOZhI1cinFLocHb1xlyFUd-YWkIByc0s_N2ITEouhwNaaZTE3cwsav484tJwHmO16KcSkRq7pGGfdtbosKd9OtlTobiu0YZjEWPLxmEwIdybNDE5Infm8rApqg8Nm31iSSWH&lib=MaUb5hewtBvtrgPuyvD2uPa1JmI-rTja0';
 
     async function fetchData(){
       try{
